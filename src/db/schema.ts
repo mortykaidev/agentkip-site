@@ -114,7 +114,7 @@ export const stripeEvents = pgTable("stripe_events", {
 }, (table) => [
   index("stripe_events_status_retry_updated_idx").on(table.status, table.nextRetryAt, table.updatedAt),
   check("stripe_events_id_check", sql`${table.stripeEventId} ~ '^evt_'`),
-  check("stripe_events_type_check", sql`${table.eventType} ~ '^[a-z]+(\\.[a-z_]+)+$' and length(${table.eventType}) <= 128`),
+  check("stripe_events_type_check", sql`${table.eventType} ~ '^[a-z0-9_]+(\\[[a-z0-9_]+(\\.[a-z0-9_]+)*\\])?(\\.[a-z0-9_]+(\\[[a-z0-9_]+(\\.[a-z0-9_]+)*\\])?)+$' and length(${table.eventType}) <= 128`),
   check("stripe_events_attempt_check", sql`${table.attemptCount} >= 0`),
   check("stripe_events_failure_code_check", sql`${table.failureCode} is null or ${table.failureCode} in ('database_retryable','lock_retryable','stripe_read_retryable','wrong_mode','malformed_supported_object','price_mismatch','product_mismatch','unknown_intent','unknown_customer','identifier_mismatch','metadata_mismatch')`),
   check("stripe_events_state_check", sql`(${table.status} in ('received','processing') and ${table.processedAt} is null and ${table.nextRetryAt} is null and ${table.failureCode} is null) or (${table.status} in ('processed','ignored') and ${table.processedAt} is not null and ${table.nextRetryAt} is null and ${table.failureCode} is null) or (${table.status} = 'retryable_failed' and ${table.processedAt} is null and ${table.nextRetryAt} is not null and ${table.failureCode} in ('database_retryable','lock_retryable','stripe_read_retryable')) or (${table.status} = 'terminal_failed' and ${table.processedAt} is not null and ${table.nextRetryAt} is null and ${table.failureCode} in ('wrong_mode','malformed_supported_object','price_mismatch','product_mismatch','unknown_intent','unknown_customer','identifier_mismatch','metadata_mismatch'))`),
@@ -173,7 +173,8 @@ export const bootstrapClaims = pgTable("bootstrap_claims", {
   uniqueIndex("bootstrap_claims_active_subject_entitlement_unique").on(table.clerkSubject, table.entitlementId).where(sql`${table.status} = 'active'`),
   check("bootstrap_claims_hash_check", sql`${table.claimHash} ~ '^[0-9a-f]{64}$'`),
   check("bootstrap_claims_pepper_check", sql`${table.pepperVersion} > 0`),
-  check("bootstrap_claims_lifecycle_check", sql`(${table.status} = 'consumed' and ${table.consumedAt} is not null and ${table.redemptionId} is not null and ${table.revokedAt} is null) or (${table.status} in ('active','expired') and ${table.redemptionId} is null and ${table.consumedAt} is null and ${table.revokedAt} is null) or (${table.status} = 'revoked' and ${table.redemptionId} is null and ${table.revokedAt} is not null and ${table.revokeReason} in ('delivery_uncertain','entitlement_inactive'))`),
+  check("bootstrap_claims_revoke_reason_check", sql`${table.revokeReason} is null or ${table.revokeReason} in ('delivery_uncertain','entitlement_inactive')`),
+  check("bootstrap_claims_lifecycle_check", sql`(${table.status} = 'consumed' and ${table.consumedAt} is not null and ${table.redemptionId} is not null and ${table.revokedAt} is null and ${table.revokeReason} is null) or (${table.status} in ('active','expired') and ${table.redemptionId} is null and ${table.consumedAt} is null and ${table.revokedAt} is null and ${table.revokeReason} is null) or (${table.status} = 'revoked' and ${table.redemptionId} is null and ${table.revokedAt} is not null and ${table.revokeReason} is not null)`),
   check("bootstrap_claims_expiry_check", sql`${table.expiresAt} > ${table.createdAt}`),
 ]);
 
