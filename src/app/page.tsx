@@ -63,11 +63,11 @@ const FEATURES: { dotClass: string; title: string; body: string }[] = [
 const HOW_IT_WORKS_STEPS: { title: string; body: string }[] = [
   {
     title: "Run the server",
-    body: "Set up Kai Core on a Mac, a Linux box, or Windows via Docker — with your own provider keys.",
+    body: "Set up Noggin on a Mac, a Linux box, or Windows via Docker — with your own provider keys.",
   },
   {
     title: "Pair with a QR",
-    body: "Scan a QR code from your server and the app connects over your own network or Tailscale.",
+    body: "Scan a QR code from your server. It connects over your own network, or through the agentkip.app relay if you're not on the same Wi-Fi.",
   },
   {
     title: "Talk to Kip anywhere",
@@ -189,7 +189,7 @@ export default async function HomePage() {
             center
             kicker="How it works"
             title="Your iPhone. Your server. Nothing in between."
-            lead="Kip is the native client; Kai Core is the agent server you run on hardware you own."
+            lead="Kip is the native client; Noggin is the agent server you run on hardware you own."
           />
         </Reveal>
         <Reveal delay={100}>
@@ -234,12 +234,12 @@ export default async function HomePage() {
                 </svg>
                 <p className="text-[12px] font-medium text-ink-muted sm:text-center">
                   Encrypted tunnel
-                  <span className="block text-[11px]">Tailscale or your own network</span>
+                  <span className="block text-[11px]">agentkip.app relay or your own network</span>
                 </p>
               </div>
 
               <div className="rounded-[14px] border border-hairline bg-elevated p-5 text-center sm:flex-1">
-                <p className="text-sm font-semibold">Your server — Kai Core</p>
+                <p className="text-sm font-semibold">Your server — Noggin</p>
                 <p className="mt-1 text-[13px] text-ink-muted">
                   Your models · your keys · your data
                 </p>

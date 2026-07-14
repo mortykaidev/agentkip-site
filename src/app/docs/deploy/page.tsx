@@ -7,7 +7,7 @@ import { CodeBlock } from "@/app/get/code-block";
 export const metadata: Metadata = {
   title: "Deploy your own server",
   description:
-    "Run Kai Core on a cloud VPS instead of hardware at home — Ubuntu bootstrap, hardening, Tailscale vs Cloudflare Tunnel, and what not to do.",
+    "Run Noggin on a cloud VPS instead of hardware at home — Ubuntu bootstrap, hardening, Tailscale vs Cloudflare Tunnel, and what not to do.",
 };
 
 export default function DeployDocsPage() {
@@ -20,7 +20,7 @@ export default function DeployDocsPage() {
             Deploy your own server
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-ink-secondary text-pretty">
-            Kai Core doesn&apos;t need to live on a computer at your desk. A small cloud VPS keeps
+            Noggin doesn&apos;t need to live on a computer at your desk. A small cloud VPS keeps
             it online 24/7 without your laptop staying awake. This guide is provider-agnostic —
             it works on DigitalOcean, Hetzner, Linode, AWS Lightsail, or anywhere you can get a
             fresh Ubuntu box.
@@ -69,7 +69,7 @@ export default function DeployDocsPage() {
         <Reveal>
           <SectionHeader kicker="Setup" title="Ubuntu server: bootstrap and harden" />
           <p className="mt-4 max-w-2xl text-ink-secondary text-pretty">
-            The kai-core repo ships scripts under <code className="font-mono text-ink">deploy/</code>{" "}
+            The noggin repo ships scripts under <code className="font-mono text-ink">deploy/</code>{" "}
             that were built for Brandon&apos;s own multi-tenant pilot host, so treat them as a
             reference to crib from rather than a single button to press — but the Docker,
             hardening, and sandboxing pieces apply directly to a single-user deploy too.
@@ -89,7 +89,7 @@ export default function DeployDocsPage() {
                 hand if that&apos;s all you need.
               </p>
               <div className="mt-3">
-                <CodeBlock code={`sudo -E ./deploy/bootstrap-ubuntu.sh`} label="run as root, from the kai-core repo" />
+                <CodeBlock code={`sudo -E ./deploy/bootstrap-ubuntu.sh`} label="run as root, from the noggin repo" />
               </div>
             </KipCard>
 
@@ -102,7 +102,7 @@ export default function DeployDocsPage() {
                 so its rules can see the tailnet interface.
               </p>
               <div className="mt-3">
-                <CodeBlock code={`sudo tailscale up --ssh --hostname kai-host\nsudo ./deploy/harden-host.sh`} />
+                <CodeBlock code={`sudo tailscale up --ssh --hostname noggin-host\nsudo ./deploy/harden-host.sh`} />
               </div>
             </KipCard>
 
