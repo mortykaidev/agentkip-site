@@ -83,3 +83,21 @@ See `.env.example`. Summary: `DATABASE_URL` (Neon), Clerk pair +
 The site shows `hello@agentkip.ai` (editable in /admin → Contact).
 Easiest real inbox: your registrar's email forwarding, or Cloudflare
 Email Routing (free) → forward to your personal address.
+
+## W1 billing migration and route gate
+
+Before a W1 deployment, review the forward-only migration, take the approved
+backup, and pass the migration gate. Apply it with `npm run db:migrate`; do not
+use `db:push` for W1. The API routes run in the Node runtime. The webhook route
+uses its exact raw request body for signature verification.
+
+Set only the documented server-side W1 environment names from `.env.example`.
+Stripe values are test-mode where applicable and the claim bearer and HMAC
+peppers use separate base64url entropy. A rollback is a reviewed forward repair,
+never a migration-history rewrite. Sanitized smoke evidence records only outcome
+classes and aggregate gate status.
+
+W1 does not create or repair any Price, Product, promotion, webhook endpoint,
+or provider configuration. The gateway remains off. Secrets, hosted checkout
+locations, user subjects, provider identifiers, and claims do not enter docs or
+PR evidence.

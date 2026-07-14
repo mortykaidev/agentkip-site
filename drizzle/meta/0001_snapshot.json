@@ -1,0 +1,1252 @@
+{
+  "id": "9d5f33de-73ad-4a4b-bc23-65bb9a717113",
+  "prevId": "c47ffe44-940f-4ea4-825f-4c727c05cd67",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.billing_checkout_intents": {
+      "name": "billing_checkout_intents",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "request_idempotency_id": {
+          "name": "request_idempotency_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clerk_subject": {
+          "name": "clerk_subject",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stripe_customer_id": {
+          "name": "stripe_customer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "product": {
+          "name": "product",
+          "type": "entitlement_product",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "configured_price_id": {
+          "name": "configured_price_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "configured_stripe_product_id": {
+          "name": "configured_stripe_product_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stripe_checkout_session_id": {
+          "name": "stripe_checkout_session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripe_subscription_id": {
+          "name": "stripe_subscription_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "billing_checkout_intents_request_idempotency_id_request_idempotency_id_fk": {
+          "name": "billing_checkout_intents_request_idempotency_id_request_idempotency_id_fk",
+          "tableFrom": "billing_checkout_intents",
+          "tableTo": "request_idempotency",
+          "columnsFrom": [
+            "request_idempotency_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "billing_checkout_intents_stripe_customer_id_billing_customers_stripe_customer_id_fk": {
+          "name": "billing_checkout_intents_stripe_customer_id_billing_customers_stripe_customer_id_fk",
+          "tableFrom": "billing_checkout_intents",
+          "tableTo": "billing_customers",
+          "columnsFrom": [
+            "stripe_customer_id"
+          ],
+          "columnsTo": [
+            "stripe_customer_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "billing_checkout_intents_request_idempotency_id_unique": {
+          "name": "billing_checkout_intents_request_idempotency_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "request_idempotency_id"
+          ]
+        },
+        "billing_checkout_intents_stripe_checkout_session_id_unique": {
+          "name": "billing_checkout_intents_stripe_checkout_session_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "stripe_checkout_session_id"
+          ]
+        },
+        "billing_checkout_intents_stripe_subscription_id_unique": {
+          "name": "billing_checkout_intents_stripe_subscription_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "stripe_subscription_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "checkout_intents_subject_nonempty": {
+          "name": "checkout_intents_subject_nonempty",
+          "value": "length(\"billing_checkout_intents\".\"clerk_subject\") > 0"
+        },
+        "checkout_intents_provider_ids": {
+          "name": "checkout_intents_provider_ids",
+          "value": "\"billing_checkout_intents\".\"configured_price_id\" ~ '^price_' and \"billing_checkout_intents\".\"configured_stripe_product_id\" ~ '^prod_' and (\"billing_checkout_intents\".\"stripe_customer_id\" is null or \"billing_checkout_intents\".\"stripe_customer_id\" ~ '^cus_') and (\"billing_checkout_intents\".\"stripe_checkout_session_id\" is null or \"billing_checkout_intents\".\"stripe_checkout_session_id\" ~ '^cs_test_') and (\"billing_checkout_intents\".\"stripe_subscription_id\" is null or \"billing_checkout_intents\".\"stripe_subscription_id\" ~ '^sub_')"
+        },
+        "checkout_intents_dependency_check": {
+          "name": "checkout_intents_dependency_check",
+          "value": "(\"billing_checkout_intents\".\"stripe_checkout_session_id\" is null or \"billing_checkout_intents\".\"stripe_customer_id\" is not null) and (\"billing_checkout_intents\".\"stripe_subscription_id\" is null or (\"billing_checkout_intents\".\"stripe_customer_id\" is not null and \"billing_checkout_intents\".\"stripe_checkout_session_id\" is not null))"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.billing_customers": {
+      "name": "billing_customers",
+      "schema": "",
+      "columns": {
+        "clerk_subject": {
+          "name": "clerk_subject",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "stripe_customer_id": {
+          "name": "stripe_customer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "billing_customers_stripe_customer_id_unique": {
+          "name": "billing_customers_stripe_customer_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "stripe_customer_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "billing_customers_subject_nonempty": {
+          "name": "billing_customers_subject_nonempty",
+          "value": "length(\"billing_customers\".\"clerk_subject\") > 0"
+        },
+        "billing_customers_customer_format": {
+          "name": "billing_customers_customer_format",
+          "value": "\"billing_customers\".\"stripe_customer_id\" ~ '^cus_'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.bootstrap_claim_attempts": {
+      "name": "bootstrap_claim_attempts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "source_ip_hash": {
+          "name": "source_ip_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "action": {
+          "name": "action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bootstrap_claim_attempts_ip_created_idx": {
+          "name": "bootstrap_claim_attempts_ip_created_idx",
+          "columns": [
+            {
+              "expression": "source_ip_hash",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "bootstrap_claim_attempts_ip_hash_check": {
+          "name": "bootstrap_claim_attempts_ip_hash_check",
+          "value": "\"bootstrap_claim_attempts\".\"source_ip_hash\" ~ '^[0-9a-f]{64}$'"
+        },
+        "bootstrap_claim_attempts_action_check": {
+          "name": "bootstrap_claim_attempts_action_check",
+          "value": "\"bootstrap_claim_attempts\".\"action\" in ('issue','reissue')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.bootstrap_claims": {
+      "name": "bootstrap_claims",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "entitlement_id": {
+          "name": "entitlement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "clerk_subject": {
+          "name": "clerk_subject",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "product": {
+          "name": "product",
+          "type": "entitlement_product",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "claim_hash": {
+          "name": "claim_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pepper_version": {
+          "name": "pepper_version",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "bootstrap_claim_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "redemption_id": {
+          "name": "redemption_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "consumed_at": {
+          "name": "consumed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revoke_reason": {
+          "name": "revoke_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bootstrap_claims_active_subject_entitlement_unique": {
+          "name": "bootstrap_claims_active_subject_entitlement_unique",
+          "columns": [
+            {
+              "expression": "clerk_subject",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "entitlement_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"bootstrap_claims\".\"status\" = 'active'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bootstrap_claims_entitlement_id_entitlements_id_fk": {
+          "name": "bootstrap_claims_entitlement_id_entitlements_id_fk",
+          "tableFrom": "bootstrap_claims",
+          "tableTo": "entitlements",
+          "columnsFrom": [
+            "entitlement_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "bootstrap_claims_claim_hash_unique": {
+          "name": "bootstrap_claims_claim_hash_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "claim_hash"
+          ]
+        },
+        "bootstrap_claims_redemption_id_unique": {
+          "name": "bootstrap_claims_redemption_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "redemption_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "bootstrap_claims_hash_check": {
+          "name": "bootstrap_claims_hash_check",
+          "value": "\"bootstrap_claims\".\"claim_hash\" ~ '^[0-9a-f]{64}$'"
+        },
+        "bootstrap_claims_pepper_check": {
+          "name": "bootstrap_claims_pepper_check",
+          "value": "\"bootstrap_claims\".\"pepper_version\" > 0"
+        },
+        "bootstrap_claims_lifecycle_check": {
+          "name": "bootstrap_claims_lifecycle_check",
+          "value": "(\"bootstrap_claims\".\"status\" = 'consumed' and \"bootstrap_claims\".\"consumed_at\" is not null and \"bootstrap_claims\".\"redemption_id\" is not null and \"bootstrap_claims\".\"revoked_at\" is null) or (\"bootstrap_claims\".\"status\" in ('active','expired') and \"bootstrap_claims\".\"redemption_id\" is null and \"bootstrap_claims\".\"consumed_at\" is null and \"bootstrap_claims\".\"revoked_at\" is null) or (\"bootstrap_claims\".\"status\" = 'revoked' and \"bootstrap_claims\".\"redemption_id\" is null and \"bootstrap_claims\".\"revoked_at\" is not null and \"bootstrap_claims\".\"revoke_reason\" in ('delivery_uncertain','entitlement_inactive'))"
+        },
+        "bootstrap_claims_expiry_check": {
+          "name": "bootstrap_claims_expiry_check",
+          "value": "\"bootstrap_claims\".\"expires_at\" > \"bootstrap_claims\".\"created_at\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.contact_messages": {
+      "name": "contact_messages",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.content_sections": {
+      "name": "content_sections",
+      "schema": "",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.entitlement_transitions": {
+      "name": "entitlement_transitions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "entitlement_id": {
+          "name": "entitlement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stripe_event_id": {
+          "name": "stripe_event_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "from_status": {
+          "name": "from_status",
+          "type": "entitlement_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "to_status": {
+          "name": "to_status",
+          "type": "entitlement_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_created_at": {
+          "name": "event_created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_precedence": {
+          "name": "event_precedence",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason_code": {
+          "name": "reason_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "entitlement_transitions_entitlement_id_entitlements_id_fk": {
+          "name": "entitlement_transitions_entitlement_id_entitlements_id_fk",
+          "tableFrom": "entitlement_transitions",
+          "tableTo": "entitlements",
+          "columnsFrom": [
+            "entitlement_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "entitlement_transitions_stripe_event_id_stripe_events_stripe_event_id_fk": {
+          "name": "entitlement_transitions_stripe_event_id_stripe_events_stripe_event_id_fk",
+          "tableFrom": "entitlement_transitions",
+          "tableTo": "stripe_events",
+          "columnsFrom": [
+            "stripe_event_id"
+          ],
+          "columnsTo": [
+            "stripe_event_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "entitlement_transitions_stripe_event_id_unique": {
+          "name": "entitlement_transitions_stripe_event_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "stripe_event_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "entitlement_transitions_reason_check": {
+          "name": "entitlement_transitions_reason_check",
+          "value": "\"entitlement_transitions\".\"reason_code\" in ('checkout_completed','subscription_created','subscription_updated','subscription_deleted','invoice_paid','invoice_payment_failed')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.entitlements": {
+      "name": "entitlements",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "clerk_subject": {
+          "name": "clerk_subject",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "product": {
+          "name": "product",
+          "type": "entitlement_product",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "entitlement_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "entitlement_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stripe_customer_id": {
+          "name": "stripe_customer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stripe_checkout_session_id": {
+          "name": "stripe_checkout_session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripe_subscription_id": {
+          "name": "stripe_subscription_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_stripe_event_id": {
+          "name": "last_stripe_event_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_event_created_at": {
+          "name": "last_event_created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_event_precedence": {
+          "name": "last_event_precedence",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "granted_at": {
+          "name": "granted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "entitlements_subject_product_unique": {
+          "name": "entitlements_subject_product_unique",
+          "columns": [
+            {
+              "expression": "clerk_subject",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "product",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "entitlements_active_subject_product_unique": {
+          "name": "entitlements_active_subject_product_unique",
+          "columns": [
+            {
+              "expression": "clerk_subject",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "product",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"entitlements\".\"status\" = 'active'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "entitlements_clerk_subject_billing_customers_clerk_subject_fk": {
+          "name": "entitlements_clerk_subject_billing_customers_clerk_subject_fk",
+          "tableFrom": "entitlements",
+          "tableTo": "billing_customers",
+          "columnsFrom": [
+            "clerk_subject"
+          ],
+          "columnsTo": [
+            "clerk_subject"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "entitlements_stripe_customer_id_billing_customers_stripe_customer_id_fk": {
+          "name": "entitlements_stripe_customer_id_billing_customers_stripe_customer_id_fk",
+          "tableFrom": "entitlements",
+          "tableTo": "billing_customers",
+          "columnsFrom": [
+            "stripe_customer_id"
+          ],
+          "columnsTo": [
+            "stripe_customer_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "entitlements_last_stripe_event_id_stripe_events_stripe_event_id_fk": {
+          "name": "entitlements_last_stripe_event_id_stripe_events_stripe_event_id_fk",
+          "tableFrom": "entitlements",
+          "tableTo": "stripe_events",
+          "columnsFrom": [
+            "last_stripe_event_id"
+          ],
+          "columnsTo": [
+            "stripe_event_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "entitlements_stripe_checkout_session_id_unique": {
+          "name": "entitlements_stripe_checkout_session_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "stripe_checkout_session_id"
+          ]
+        },
+        "entitlements_stripe_subscription_id_unique": {
+          "name": "entitlements_stripe_subscription_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "stripe_subscription_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "entitlements_status_dates_check": {
+          "name": "entitlements_status_dates_check",
+          "value": "(\"entitlements\".\"status\" = 'active' and \"entitlements\".\"granted_at\" is not null and \"entitlements\".\"revoked_at\" is null) or (\"entitlements\".\"status\" = 'revoked' and \"entitlements\".\"revoked_at\" is not null) or (\"entitlements\".\"status\" in ('pending','past_due') and \"entitlements\".\"revoked_at\" is null)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.request_idempotency": {
+      "name": "request_idempotency",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "route": {
+          "name": "route",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "principal": {
+          "name": "principal",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_digest": {
+          "name": "request_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "request_idempotency_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'processing'"
+        },
+        "response_status": {
+          "name": "response_status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "response_metadata": {
+          "name": "response_metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locked_until": {
+          "name": "locked_until",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "request_idempotency_route_principal_key_unique": {
+          "name": "request_idempotency_route_principal_key_unique",
+          "columns": [
+            {
+              "expression": "route",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "principal",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "idempotency_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "request_idempotency_expiry_idx": {
+          "name": "request_idempotency_expiry_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "request_idempotency_processing_lease_idx": {
+          "name": "request_idempotency_processing_lease_idx",
+          "columns": [
+            {
+              "expression": "locked_until",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "request_idempotency_route_check": {
+          "name": "request_idempotency_route_check",
+          "value": "\"request_idempotency\".\"route\" in ('/api/billing/checkout','/api/bootstrap-claims','/api/bootstrap-claims/[claim_id]/revoke','/api/bootstrap-claims/[claim_id]/reissue')"
+        },
+        "request_idempotency_key_check": {
+          "name": "request_idempotency_key_check",
+          "value": "\"request_idempotency\".\"idempotency_key\" ~ '^[A-Za-z0-9._:-]{8,128}$'"
+        },
+        "request_idempotency_digest_check": {
+          "name": "request_idempotency_digest_check",
+          "value": "\"request_idempotency\".\"request_digest\" ~ '^[0-9a-f]{64}$'"
+        },
+        "request_idempotency_expiry_check": {
+          "name": "request_idempotency_expiry_check",
+          "value": "\"request_idempotency\".\"expires_at\" > \"request_idempotency\".\"created_at\""
+        },
+        "request_idempotency_state_check": {
+          "name": "request_idempotency_state_check",
+          "value": "(\"request_idempotency\".\"status\" = 'processing' and \"request_idempotency\".\"response_status\" is null and \"request_idempotency\".\"response_metadata\" is null and \"request_idempotency\".\"locked_until\" is not null) or (\"request_idempotency\".\"status\" = 'completed' and \"request_idempotency\".\"response_status\" between 200 and 599 and \"request_idempotency\".\"response_metadata\" is not null and \"request_idempotency\".\"locked_until\" is null)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.stripe_events": {
+      "name": "stripe_events",
+      "schema": "",
+      "columns": {
+        "stripe_event_id": {
+          "name": "stripe_event_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_created_at": {
+          "name": "event_created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "stripe_event_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'received'"
+        },
+        "attempt_count": {
+          "name": "attempt_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "processed_at": {
+          "name": "processed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "next_retry_at": {
+          "name": "next_retry_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "failure_code": {
+          "name": "failure_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "stripe_events_status_retry_updated_idx": {
+          "name": "stripe_events_status_retry_updated_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "next_retry_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "stripe_events_id_check": {
+          "name": "stripe_events_id_check",
+          "value": "\"stripe_events\".\"stripe_event_id\" ~ '^evt_'"
+        },
+        "stripe_events_type_check": {
+          "name": "stripe_events_type_check",
+          "value": "\"stripe_events\".\"event_type\" ~ '^[a-z]+(\\.[a-z_]+)+$' and length(\"stripe_events\".\"event_type\") <= 128"
+        },
+        "stripe_events_attempt_check": {
+          "name": "stripe_events_attempt_check",
+          "value": "\"stripe_events\".\"attempt_count\" >= 0"
+        },
+        "stripe_events_failure_code_check": {
+          "name": "stripe_events_failure_code_check",
+          "value": "\"stripe_events\".\"failure_code\" is null or \"stripe_events\".\"failure_code\" in ('database_retryable','lock_retryable','stripe_read_retryable','wrong_mode','malformed_supported_object','price_mismatch','product_mismatch','unknown_intent','unknown_customer','identifier_mismatch','metadata_mismatch')"
+        },
+        "stripe_events_state_check": {
+          "name": "stripe_events_state_check",
+          "value": "(\"stripe_events\".\"status\" in ('received','processing') and \"stripe_events\".\"processed_at\" is null and \"stripe_events\".\"next_retry_at\" is null and \"stripe_events\".\"failure_code\" is null) or (\"stripe_events\".\"status\" in ('processed','ignored') and \"stripe_events\".\"processed_at\" is not null and \"stripe_events\".\"next_retry_at\" is null and \"stripe_events\".\"failure_code\" is null) or (\"stripe_events\".\"status\" = 'retryable_failed' and \"stripe_events\".\"processed_at\" is null and \"stripe_events\".\"next_retry_at\" is not null and \"stripe_events\".\"failure_code\" in ('database_retryable','lock_retryable','stripe_read_retryable')) or (\"stripe_events\".\"status\" = 'terminal_failed' and \"stripe_events\".\"processed_at\" is not null and \"stripe_events\".\"next_retry_at\" is null and \"stripe_events\".\"failure_code\" in ('wrong_mode','malformed_supported_object','price_mismatch','product_mismatch','unknown_intent','unknown_customer','identifier_mismatch','metadata_mismatch'))"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.waitlist": {
+      "name": "waitlist",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "waitlist_email_unique": {
+          "name": "waitlist_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.bootstrap_claim_status": {
+      "name": "bootstrap_claim_status",
+      "schema": "public",
+      "values": [
+        "active",
+        "consumed",
+        "expired",
+        "revoked"
+      ]
+    },
+    "public.entitlement_product": {
+      "name": "entitlement_product",
+      "schema": "public",
+      "values": [
+        "agentkip_first_friend"
+      ]
+    },
+    "public.entitlement_source": {
+      "name": "entitlement_source",
+      "schema": "public",
+      "values": [
+        "stripe_subscription"
+      ]
+    },
+    "public.entitlement_status": {
+      "name": "entitlement_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "active",
+        "past_due",
+        "revoked"
+      ]
+    },
+    "public.request_idempotency_status": {
+      "name": "request_idempotency_status",
+      "schema": "public",
+      "values": [
+        "processing",
+        "completed"
+      ]
+    },
+    "public.stripe_event_status": {
+      "name": "stripe_event_status",
+      "schema": "public",
+      "values": [
+        "received",
+        "processing",
+        "processed",
+        "ignored",
+        "retryable_failed",
+        "terminal_failed"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

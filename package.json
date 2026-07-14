@@ -7,6 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "test": "vitest run --exclude tests/integration/**",
+    "test:db": "vitest run tests/integration/w1-database.test.ts --maxWorkers=1",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "check": "npm run lint && npm run typecheck && npm test && npm run test:db && npm run build",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },
@@ -19,18 +25,23 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "server-only": "^0.0.1",
+    "stripe": "22.3.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
     "@tailwindcss/postcss": "^4.3.2",
+    "@testcontainers/postgresql": "12.0.4",
     "@types/node": "^26.1.1",
+    "@types/pg": "8.20.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.2.10",
+    "pg": "8.22.0",
     "tailwindcss": "^4.3.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "4.1.10"
   }
 }
