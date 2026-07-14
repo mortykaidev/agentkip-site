@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "vitest run --passWithNoTests --exclude tests/integration/**",
+    "test": "vitest run --exclude tests/integration/**",
     "test:db": "vitest run tests/integration/w1-database.test.ts --maxWorkers=1",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",

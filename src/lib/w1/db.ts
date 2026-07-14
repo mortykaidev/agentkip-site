@@ -1,11 +1,15 @@
 import "server-only";
 import { Pool } from "@neondatabase/serverless";
 import { sql } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import * as schema from "@/db/schema";
 
 export type W1Database = ReturnType<typeof drizzle<typeof schema>>;
-export type W1Transaction = Parameters<Parameters<W1Database["transaction"]>[0]>[0];
+/** The small query port shared by the Neon runtime driver and disposable pg tests. */
+export interface W1Transaction {
+  execute(statement: SQL): PromiseLike<{ rows: Record<string, unknown>[] }>;
+}
 
 export interface W1DatabasePort {
   transaction<T>(callback: (tx: W1Transaction) => Promise<T>): Promise<T>;
