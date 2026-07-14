@@ -156,7 +156,7 @@ const exactRowValues = (value: unknown): Map<(typeof idempotencyFields)[number],
   }
   return values;
 };
-const epochDate = (value: unknown): Date | null => {
+export const epochDate = (value: unknown): Date | null => {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
   const date = new Date(value);
   return Number.isFinite(date.getTime()) ? date : null;
