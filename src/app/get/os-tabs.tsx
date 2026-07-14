@@ -6,8 +6,8 @@ import { CodeBlock } from "@/app/get/code-block";
 /**
  * Client-side OS tab switcher for the "run your server" quickstart on /get.
  * Used by: src/app/get/page.tsx.
- * Steps come from verified kai-core facts (README.md, docker-compose.yml,
- * docker-compose.windows.yml, .env.example, kai-iphone-app pairing docs) —
+ * Steps come from verified noggin facts (README.md, docker-compose.yml,
+ * docker-compose.windows.yml, .env.example, AgentKip iOS pairing docs) —
  * no invented public repo URL; the clone link ships with the beta invite.
  */
 
@@ -93,9 +93,9 @@ function MacLinuxSteps({ os }: { os: "macos" | "linux" }) {
     <StepList>
       <Step
         n={1}
-        title="Clone Kai Core"
+        title="Clone Noggin"
         body="The repo link comes with your beta invite — clone it wherever you keep projects."
-        code={`git clone <the-repo-url-from-your-invite> kai-core\ncd kai-core`}
+        code={`git clone <the-repo-url-from-your-invite> noggin\ncd noggin`}
       />
       <Step
         n={2}
@@ -122,18 +122,18 @@ function MacLinuxSteps({ os }: { os: "macos" | "linux" }) {
       />
       <Step
         n={6}
-        title="Expose it over Tailscale"
+        title="Expose it over Tailscale — or skip this with the agentkip.app relay"
         body={
           os === "macos"
-            ? "Install Tailscale, sign in, then serve the local port with TLS. Never expose plain http:// on an untrusted LAN."
-            : "Same story on Linux — Tailscale gives you a real HTTPS hostname without opening any ports."
+            ? "Install Tailscale, sign in, then serve the local port with TLS. Never expose plain http:// on an untrusted LAN. Prefer not to install anything? The Noggin desktop app can provision an agentkip.app relay URL instead."
+            : "Same story on Linux — Tailscale gives you a real HTTPS hostname without opening any ports. The agentkip.app relay is the no-install alternative."
         }
         code={`tailscale serve https / http://127.0.0.1:8642`}
       />
       <Step
         n={7}
         title="Generate a pairing QR and scan it in the app"
-        code={`scripts/kai-host.py qr --mode tailscale --output /tmp/kai-pairing.png`}
+        code={`scripts/noggin-host.py qr --mode tailscale --output /tmp/noggin-pairing.png`}
       />
     </StepList>
   );
@@ -145,13 +145,13 @@ function WindowsSteps() {
       <Step
         n={1}
         title="Install Docker Desktop"
-        body="Kai Core on Windows runs through Docker Desktop — there's a dedicated compose file for it."
+        body="Noggin on Windows runs through Docker Desktop — there's a dedicated compose file for it."
       />
       <Step
         n={2}
-        title="Clone Kai Core"
+        title="Clone Noggin"
         body="The repo link comes with your beta invite."
-        code={`git clone <the-repo-url-from-your-invite> kai-core\ncd kai-core`}
+        code={`git clone <the-repo-url-from-your-invite> noggin\ncd noggin`}
       />
       <Step
         n={3}
@@ -174,7 +174,7 @@ function WindowsSteps() {
       <Step
         n={6}
         title="Expose it over Tailscale, then pair"
-        body="Same rule as every other platform: pair over Tailscale/HTTPS, never plain http:// on an untrusted LAN."
+        body="Same rule as every other platform: pair over Tailscale/HTTPS or the agentkip.app relay, never plain http:// on an untrusted LAN."
         code={`tailscale serve https / http://127.0.0.1:8642`}
       />
     </StepList>
@@ -186,9 +186,9 @@ function DockerSteps() {
     <StepList>
       <Step
         n={1}
-        title="Clone Kai Core"
+        title="Clone Noggin"
         body="The repo link comes with your beta invite."
-        code={`git clone <the-repo-url-from-your-invite> kai-core\ncd kai-core`}
+        code={`git clone <the-repo-url-from-your-invite> noggin\ncd noggin`}
       />
       <Step
         n={2}
@@ -209,7 +209,7 @@ function DockerSteps() {
       <Step
         n={5}
         title="Expose it over Tailscale, then pair"
-        body="Pair over Tailscale/HTTPS only — never plain http:// on an untrusted LAN. Deeper guidance is on the security page."
+        body="Pair over Tailscale/HTTPS or the agentkip.app relay — never plain http:// on an untrusted LAN. Deeper guidance is on the security page."
         code={`tailscale serve https / http://127.0.0.1:8642`}
       />
     </StepList>

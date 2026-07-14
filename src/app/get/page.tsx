@@ -9,7 +9,7 @@ import { OsTabs } from "@/app/get/os-tabs";
 export const metadata: Metadata = {
   title: "Get Kip",
   description:
-    "The one link for AgentKip: get the invite-only iOS beta, or run your own Kai Core server on macOS, Linux, Windows, or Docker.",
+    "The one link for AgentKip: get the invite-only iOS beta, or run your own Noggin server on macOS, Linux, Windows, or Docker.",
 };
 
 export default async function GetPage() {
@@ -42,7 +42,7 @@ export default async function GetPage() {
               <Pill tone="sky">2</Pill>
               <p className="mt-4 text-xl font-semibold text-ink">Run your server</p>
               <p className="mt-2 text-sm text-ink-secondary">
-                Stand up Kai Core on hardware you own — macOS, Linux, Windows, or Docker.
+                Stand up Noggin on hardware you own — macOS, Linux, Windows, or Docker.
               </p>
             </a>
           </div>
@@ -92,9 +92,9 @@ export default async function GetPage() {
                 simplest path is a single OpenRouter key; Anthropic or OpenAI direct also work.
               </li>
               <li>
-                <span className="font-semibold text-ink">A free Tailscale account</span>{" "}
-                (recommended) — gives your phone an encrypted path to your server without opening
-                ports.
+                <span className="font-semibold text-ink">A way to reach it from outside your network</span>{" "}
+                — the agentkip.app relay (simplest, no setup) or your own Tailscale/Cloudflare
+                Tunnel, if you&apos;d rather manage the tunnel yourself.
               </li>
             </ul>
           </KipCard>
@@ -110,8 +110,8 @@ export default async function GetPage() {
           <KipCard className="mt-8 max-w-2xl border-hairline-strong p-6">
             <p className="font-semibold text-ink">A word on security</p>
             <p className="mt-2 text-sm text-ink-secondary">
-              Always pair over Tailscale (or another encrypted tunnel) and HTTPS. Never expose
-              plain <code className="font-mono text-ink">http://</code> on an untrusted LAN —
+              Always pair through the agentkip.app relay, Tailscale, or another encrypted tunnel
+              — plus HTTPS. Never expose plain <code className="font-mono text-ink">http://</code> on an untrusted LAN —
               the pairing token is a bearer credential. For the full threat model and
               mitigations, see{" "}
               <Link href="/security" className="font-semibold text-ink underline underline-offset-4">

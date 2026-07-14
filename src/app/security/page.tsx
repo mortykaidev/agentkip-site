@@ -14,7 +14,7 @@ export const metadata: Metadata = {
    The honest security page. Plain language, no spin. Two lists:
    what's genuinely solid today (mint) and what we disclose openly (butter),
    each disclosure paired with its mitigation. Facts verified against the
-   kai-core / kai-iphone-app codebases per the approved plan.
+   noggin / agentkip-ios codebases per the approved plan.
 --------------------------------------------------------------------------- */
 
 const SOLID_TODAY: { title: string; body: string }[] = [
@@ -36,7 +36,7 @@ const SOLID_TODAY: { title: string; body: string }[] = [
   },
   {
     title: "HTTPS enforced for remote hosts",
-    body: "The app requires HTTPS when connecting to a server outside your trusted local ranges. The blessed setup routes all traffic through a Tailscale (WireGuard) encrypted tunnel.",
+    body: "The app requires HTTPS when connecting to a server outside your trusted local ranges. The blessed setup for testers routes traffic through the agentkip.app relay (Cloudflare Tunnel); self-hosters can use Tailscale (WireGuard) directly instead.",
   },
   {
     title: "Honest capability gating",
@@ -74,8 +74,8 @@ const HONEST_ABOUT: { title: string; body: string; mitigation: React.ReactNode }
     body: "The app technically permits pairing over plain HTTP on localhost, LAN, and Tailscale address ranges. On a network you don’t control, that would expose your token in transit.",
     mitigation: (
       <>
-        Use Tailscale — then everything, pairing included, rides an encrypted WireGuard tunnel
-        regardless. Never pair over plain HTTP on a network you don’t trust.
+        Use the agentkip.app relay or Tailscale — either way, everything, pairing included, rides
+        an encrypted tunnel regardless. Never pair over plain HTTP on a network you don’t trust.
       </>
     ),
   },
@@ -147,7 +147,7 @@ export default function SecurityPage() {
               </div>
               <div className="flex flex-1 flex-col justify-center rounded-[10px] border border-dashed border-hairline-strong p-5 text-center">
                 <Pill tone="mint" className="mx-auto">
-                  TLS · Tailscale / WireGuard
+                  TLS · agentkip.app relay / Tailscale
                 </Pill>
                 <p className="mt-3 text-sm text-ink-secondary">
                   Traffic rides an encrypted tunnel between your phone and your server. Nothing
