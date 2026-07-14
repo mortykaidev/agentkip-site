@@ -1,7 +1,6 @@
 import { ClerkProvider, Show, UserButton } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import localFont from "next/font/local";
 import Script from "next/script";
 import "./globals.css";
 import { Nav } from "@/components/nav";
@@ -9,12 +8,6 @@ import { Footer } from "@/components/footer";
 import { Pill } from "@/components/ui";
 import { isClerkConfigured } from "@/lib/auth";
 import { getContent } from "@/lib/content";
-
-const gugi = localFont({
-  src: "../fonts/Gugi-Regular.ttf",
-  variable: "--font-gugi",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://agentkip.ai"),
@@ -30,6 +23,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+  },
+  alternates: {
+    canonical: "/",
   },
 };
 
@@ -90,7 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const clerkEnabled = isClerkConfigured();
 
   const page = (
-    <html lang="en" className={gugi.variable} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Apply persisted theme before first paint to avoid flash */}
         <Script id="kip-theme-init" strategy="beforeInteractive">
@@ -98,8 +94,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Script>
       </head>
       <body className="flex min-h-svh flex-col">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-5 focus:top-5 focus:z-[100] focus:rounded bg-sky px-4 py-2 font-semibold text-[#101c26]">
+          Skip to content
+        </a>
         <Nav accountSlot={clerkEnabled ? <AccountSlot /> : undefined} />
-        <main className="flex-1">{children}</main>
+        <main id="main-content" className="flex-1">{children}</main>
         <Footer statusSlot={<StatusPill />} />
       </body>
     </html>

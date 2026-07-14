@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Section, SectionHeader, KipCard } from "@/components/ui";
+import { Section, KipCard, PageHeader } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <Section className="py-16 sm:py-24">
-      <SectionHeader kicker="Legal" title="Privacy Policy" lead="Effective July 11, 2026." />
+      <PageHeader kicker="Legal" title="Privacy Policy" lead="Effective July 11, 2026." />
 
       <div className="mt-10 max-w-2xl space-y-10 text-[15px] leading-relaxed text-ink-secondary">
         <p>

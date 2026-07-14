@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getContent } from "@/lib/content";
-import { Section, SectionHeader, KipCard, Pill, Kicker, type PillTone } from "@/components/ui";
+import { Section, PageHeader, KipCard, Kicker, type PillTone } from "@/components/ui";
 import type { RoadmapItem } from "@/lib/content-types";
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export default async function RoadmapPage() {
 
   return (
     <Section className="py-16 sm:py-24">
-      <SectionHeader kicker="Roadmap" title="What's next" />
+      <PageHeader kicker="Roadmap" title="What's next" />
       <p className="mt-4 max-w-2xl text-sm text-ink-muted">
         Roadmap = intent, not a promise. Nothing here is shipped until it&apos;s in the changelog.
       </p>
@@ -32,7 +32,6 @@ export default async function RoadmapPage() {
               <div className="space-y-4">
                 {items.map((item) => (
                   <KipCard key={item.title}>
-                    <Pill tone={col.tone}>{col.heading}</Pill>
                     <h3 className="mt-3 text-base font-semibold text-ink">{item.title}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-ink-secondary">
                       {item.description}

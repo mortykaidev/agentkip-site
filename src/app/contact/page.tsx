@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getContent } from "@/lib/content";
-import { Section, SectionHeader, KipCard } from "@/components/ui";
+import { Section, KipCard, PageHeader } from "@/components/ui";
 import { ContactForm } from "@/components/forms/contact-form";
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export default async function ContactPage() {
 
   return (
     <Section className="py-16 sm:py-24">
-      <SectionHeader kicker="Contact" title="Say hello" lead={contact.blurb} />
+      <PageHeader kicker="Contact" title="Say hello" lead={contact.blurb} />
       <div className="mt-10 grid max-w-4xl gap-6 md:grid-cols-2">
         <KipCard className="flex flex-col justify-center">
           <h3 className="text-base font-semibold text-ink">Email</h3>

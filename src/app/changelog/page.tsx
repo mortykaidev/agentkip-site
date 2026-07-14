@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getContent } from "@/lib/content";
-import { Section, SectionHeader } from "@/components/ui";
+import { Section, PageHeader } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Changelog",
@@ -12,7 +12,7 @@ export default async function ChangelogPage() {
 
   return (
     <Section className="py-16 sm:py-24">
-      <SectionHeader kicker="Changelog" title="Build notes" lead="What actually shipped, dated." />
+      <PageHeader kicker="Updates" title="Build notes" lead="What actually shipped, dated." />
       <div className="relative mt-10 max-w-2xl">
         <div
           aria-hidden="true"

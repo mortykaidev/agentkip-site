@@ -36,8 +36,8 @@ export function KipButton({
   disabled?: boolean;
   children: ReactNode;
 }) {
-  const cls = `inline-flex items-center justify-center gap-2 rounded-[14px] kip-press transition-colors ${BUTTON_STYLES[variant]} ${BUTTON_SIZES[size]} ${disabled ? "opacity-50 pointer-events-none" : ""} ${className}`;
-  if (href) {
+  const cls = `inline-flex items-center justify-center gap-2 rounded-[14px] kip-press transition-colors ${BUTTON_STYLES[variant]} ${BUTTON_SIZES[size]} ${disabled ? "cursor-not-allowed opacity-50" : ""} ${className}`;
+  if (href && !disabled) {
     return (
       <Link href={href} className={cls}>
         {children}
@@ -48,6 +48,26 @@ export function KipButton({
     <button type={type ?? "button"} onClick={onClick} disabled={disabled} className={cls}>
       {children}
     </button>
+  );
+}
+
+export function PageHeader({
+  kicker,
+  title,
+  lead,
+  className = "",
+}: {
+  kicker?: string;
+  title: string;
+  lead?: string;
+  className?: string;
+}) {
+  return (
+    <div className={`max-w-3xl ${className}`}>
+      {kicker ? <Kicker className="mb-3">{kicker}</Kicker> : null}
+      <h1 className="text-balance text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">{title}</h1>
+      {lead ? <p className="mt-5 max-w-2xl text-pretty text-lg text-ink-secondary">{lead}</p> : null}
+    </div>
   );
 }
 

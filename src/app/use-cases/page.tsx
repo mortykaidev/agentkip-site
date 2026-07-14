@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { KipCard, Pill, Section, SectionHeader, type PillTone } from "@/components/ui";
+import { KipCard, Pill, Section, PageHeader, type PillTone } from "@/components/ui";
 import { StatusGlyph } from "@/components/brand";
 import { Reveal } from "@/components/reveal";
 import { getContent } from "@/lib/content";
@@ -20,7 +20,7 @@ export default async function UseCasesPage() {
     <div className="py-16 sm:py-24">
       <Section>
         <Reveal>
-          <SectionHeader
+          <PageHeader
             kicker="Use cases"
             title="Real workflows, running today"
             lead="Everything below is something the app supports right now — no roadmap items mixed in. Where a result slot is empty, that’s deliberate: we’ll post output from real runs as we capture them, not cherry-picked fabrications."

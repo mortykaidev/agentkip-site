@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getContent } from "@/lib/content";
-import { Section, SectionHeader } from "@/components/ui";
+import { Section, PageHeader } from "@/components/ui";
 import { Reveal } from "@/components/reveal";
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export default async function FaqPage() {
 
   return (
     <Section className="py-16 sm:py-24">
-      <SectionHeader
+      <PageHeader
         kicker="FAQ"
         title="Questions people actually ask"
         lead="Honest answers about data, cost, devices, and what's actually shipped versus what's coming."

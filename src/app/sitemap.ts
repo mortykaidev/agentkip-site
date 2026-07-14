@@ -13,7 +13,6 @@ const ROUTES = [
   "/faq",
   "/roadmap",
   "/changelog",
-  "/gallery",
   "/kip",
   "/contact",
   "/privacy",
@@ -21,7 +20,7 @@ const ROUTES = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
+  const lastModified = new Date("2026-07-14T00:00:00.000Z");
   return ROUTES.map((route) => ({
     url: `${SITE_URL}${route}`,
     lastModified,

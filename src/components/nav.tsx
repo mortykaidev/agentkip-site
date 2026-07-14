@@ -6,16 +6,16 @@ import { useEffect, useState } from "react";
 import { KipLockup } from "@/components/brand";
 
 const PRIMARY_LINKS = [
-  { href: "/ios", label: "iOS 27" },
-  { href: "/compare", label: "Compare" },
+  { href: "/", label: "Product" },
+  { href: "/ios", label: "How it works" },
   { href: "/security", label: "Security" },
-  { href: "/use-cases", label: "Use cases" },
+  { href: "/changelog", label: "Updates" },
 ];
 
 const MORE_LINKS = [
   { href: "/roadmap", label: "Roadmap" },
-  { href: "/changelog", label: "Changelog" },
-  { href: "/gallery", label: "Gallery" },
+  { href: "/compare", label: "Compare" },
+  { href: "/use-cases", label: "Use cases" },
   { href: "/faq", label: "FAQ" },
   { href: "/docs/deploy", label: "Deploy a server" },
   { href: "/kip", label: "Kip's Corner" },
@@ -41,6 +41,14 @@ export function Nav({ accountSlot }: { accountSlot?: React.ReactNode }) {
     };
   }, [open]);
 
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 border-b border-hairline bg-bg">
       <nav className="mx-auto flex h-16 w-full max-w-6xl items-center gap-6 px-5 sm:px-8">
@@ -56,8 +64,9 @@ export function Nav({ accountSlot }: { accountSlot?: React.ReactNode }) {
             <button
               type="button"
               className="rounded-full px-3.5 py-2 text-sm text-ink-secondary transition-colors hover:text-ink"
+              aria-haspopup="true"
             >
-              More
+              Explore
             </button>
             <div className="invisible absolute right-0 top-full pt-2 opacity-0 transition-all group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
               <div className="kip-card flex w-48 flex-col p-2 shadow-xl shadow-black/20">
@@ -81,7 +90,7 @@ export function Nav({ accountSlot }: { accountSlot?: React.ReactNode }) {
             href="/get"
             className="kip-press rounded-full bg-accent px-4 py-2 text-sm font-semibold text-on-accent transition-colors hover:brightness-105"
           >
-            Get Kip
+            Join private beta
           </Link>
           <button
             type="button"
@@ -129,7 +138,7 @@ export function Nav({ accountSlot }: { accountSlot?: React.ReactNode }) {
               href="/get"
               className="kip-press mt-4 rounded-[14px] bg-accent px-4 py-3.5 text-center text-lg font-semibold text-on-accent"
             >
-              Get Kip
+            Join private beta
             </Link>
           </div>
         </div>
@@ -145,6 +154,7 @@ function NavLink({ href, label, active }: { href: string; label: string; active:
       className={`rounded-full px-3.5 py-2 text-sm transition-colors ${
         active ? "bg-surface text-ink" : "text-ink-secondary hover:text-ink"
       }`}
+      aria-current={active ? "page" : undefined}
     >
       {label}
     </Link>

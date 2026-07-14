@@ -172,6 +172,7 @@ function InviteBlock({ inviteHeadline, inviteBody }: { inviteHeadline: string; i
 }
 
 function TestFlightBlock({ testflightUrl }: { testflightUrl: string | null }) {
+  const destination = verifiedTestFlightDestination(testflightUrl);
   return (
     <div>
       <Pill tone="mint">TestFlight</Pill>
@@ -180,11 +181,11 @@ function TestFlightBlock({ testflightUrl }: { testflightUrl: string | null }) {
         Still invite-only for friends and testers — TestFlight just makes installs and updates
         easier once you&apos;re in.
       </p>
-      {testflightUrl ? (
-        <div className="mt-6">
-          <KipButton href={testflightUrl}>Open TestFlight invite</KipButton>
-        </div>
-      ) : null}
+      <div className="mt-6">
+        <KipButton href={destination ?? undefined} disabled={!destination}>
+          {destination ? "Open TestFlight invite" : "TestFlight invite pending"}
+        </KipButton>
+      </div>
       <div className="mt-6 space-y-3 text-sm text-ink-secondary">
         <p className="font-semibold text-ink">How it works</p>
         <ol className="list-decimal space-y-1.5 pl-5">
@@ -201,14 +202,25 @@ function TestFlightBlock({ testflightUrl }: { testflightUrl: string | null }) {
 function AppStoreBlock() {
   return (
     <div>
-      <Pill tone="mint">Available now</Pill>
-      <p className="mt-4 text-xl font-semibold text-ink">Download on the App Store</p>
+      <Pill tone="outline">Release gate pending</Pill>
+      <p className="mt-4 text-xl font-semibold text-ink">App Store download is not open yet</p>
       <p className="mt-2 text-sm text-ink-secondary">
-        Kip is live on the App Store. Grab it, then come back here to set up your server.
+        This action stays disabled until the public release contract and a verified store destination
+        are both in place.
       </p>
       <div className="mt-6">
-        <KipButton href="https://apps.apple.com/">View on the App Store</KipButton>
+        <KipButton disabled>App Store release pending</KipButton>
       </div>
     </div>
   );
+}
+
+function verifiedTestFlightDestination(value: string | null): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname === "testflight.apple.com" ? url.toString() : null;
+  } catch {
+    return null;
+  }
 }

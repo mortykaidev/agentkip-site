@@ -3,11 +3,9 @@ import type { CSSProperties } from "react";
 /*
   Kip brand marks, transcribed from design/explorations/kip-brand/*.svg
   (geometry ground truth: kipfont.py). All strokes round-capped.
-  Fixed brand colors — identical in both themes:
-  charcoal #262624 · cream #F0EEE6 · seafoam #7FD8B1 · butter #F2CF87 · coral #FF9D7A
+  The lockup follows the surrounding ink; only deliberate accent dots are fixed.
 */
 
-const CREAM = "#f0eee6";
 const CHARCOAL = "#262624";
 const SEAFOAM = "#7fd8b1";
 const BUTTER = "#f2cf87";
@@ -24,18 +22,18 @@ export function KipIcon({ size = 40, className }: { size?: number; className?: s
       aria-hidden="true"
     >
       <rect x="0" y="0" width="1024" height="1024" rx="224" fill={CHARCOAL} />
-      <rect x="364" y="225" width="104" height="560" rx="52" fill={CREAM} />
+      <rect x="364" y="225" width="104" height="560" rx="52" fill="#f0eee6" />
       <path
         d="M 416 610 L 632 415"
         fill="none"
-        stroke={CREAM}
+        stroke="#f0eee6"
         strokeWidth="104"
         strokeLinecap="round"
       />
       <path
         d="M 442 632 L 650 795"
         fill="none"
-        stroke={CREAM}
+        stroke="#f0eee6"
         strokeWidth="104"
         strokeLinecap="round"
       />
@@ -43,7 +41,7 @@ export function KipIcon({ size = 40, className }: { size?: number; className?: s
       <path
         d="M 755 600 A 86 86 0 1 1 669 514"
         fill="none"
-        stroke={CREAM}
+        stroke="#f0eee6"
         strokeWidth="18"
         strokeLinecap="round"
       />
@@ -137,7 +135,7 @@ export function OrbitMark({
           rx="330"
           ry="132"
           fill="none"
-          stroke={CREAM}
+          stroke="currentColor"
           strokeWidth="22"
           opacity="0.85"
           transform="rotate(-24 512 512)"
@@ -163,7 +161,7 @@ export function OrbitSystem({ className }: { className?: string }) {
           rx="380"
           ry="140"
           fill="none"
-          stroke={CREAM}
+          stroke="currentColor"
           strokeWidth="10"
           opacity="0.35"
           transform="rotate(-18 512 320)"
@@ -181,7 +179,7 @@ export function OrbitSystem({ className }: { className?: string }) {
           rx="270"
           ry="96"
           fill="none"
-          stroke={CREAM}
+          stroke="currentColor"
           strokeWidth="8"
           opacity="0.25"
           transform="rotate(-24 512 320)"
@@ -190,7 +188,7 @@ export function OrbitSystem({ className }: { className?: string }) {
         <circle cx="286" cy="404" r="11" fill="#efaac0" transform="rotate(-24 512 320)" />
       </g>
       <circle cx="512" cy="320" r="88" fill={SEAFOAM} className="animate-breathe" style={{ transformOrigin: "512px 320px" }} />
-      <circle cx="512" cy="320" r="88" fill="none" stroke={CREAM} strokeWidth="6" opacity="0.2" />
+      <circle cx="512" cy="320" r="88" fill="none" stroke="currentColor" strokeWidth="6" opacity="0.2" />
     </svg>
   );
 }
@@ -219,7 +217,7 @@ export function StatusGlyph({
           <path
             d="M 71.4 93.4 A 80 80 0 0 1 184.6 93.4"
             fill="none"
-            stroke={CREAM}
+            stroke="currentColor"
             strokeWidth="24"
             strokeLinecap="round"
           />
@@ -229,9 +227,9 @@ export function StatusGlyph({
       return (
         <svg viewBox="256 0 256 256" {...common}>
           <circle cx="384" cy="150" r="40" fill={SEAFOAM} />
-          <circle cx="323.9" cy="89.9" r="12" fill={CREAM} className="animate-blink" />
-          <circle cx="384" cy="65" r="12" fill={CREAM} className="animate-blink" style={{ animationDelay: "0.2s" }} />
-          <circle cx="444.1" cy="89.9" r="12" fill={CREAM} className="animate-blink" style={{ animationDelay: "0.4s" }} />
+          <circle cx="323.9" cy="89.9" r="12" fill="currentColor" className="animate-blink" />
+          <circle cx="384" cy="65" r="12" fill="currentColor" className="animate-blink" style={{ animationDelay: "0.2s" }} />
+          <circle cx="444.1" cy="89.9" r="12" fill="currentColor" className="animate-blink" style={{ animationDelay: "0.4s" }} />
         </svg>
       );
     case "working": // orbit sweep + butter mote
@@ -241,7 +239,7 @@ export function StatusGlyph({
           <path
             d="M 720 150 A 80 80 0 1 1 640 70"
             fill="none"
-            stroke={CREAM}
+            stroke="currentColor"
             strokeWidth="24"
             strokeLinecap="round"
           />
@@ -255,7 +253,7 @@ export function StatusGlyph({
           <path
             d="M 882 152 L 912 184 L 968 108"
             fill="none"
-            stroke={CREAM}
+            stroke="currentColor"
             strokeWidth="24"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -277,7 +275,7 @@ export function StatusGlyph({
           <path
             d="M 1364 154 Q 1392 172 1420 154"
             fill="none"
-            stroke={CREAM}
+            stroke="currentColor"
             strokeWidth="13"
             strokeLinecap="round"
           />

@@ -1,5 +1,5 @@
 import { OrbitMark, OrbitSystem } from "@/components/brand";
-import { PhoneDemo } from "@/components/demo/phone-demo";
+import { InteractiveProductWalkthrough } from "@/components/interactive-product-walkthrough";
 import { WaitlistForm } from "@/components/forms/waitlist-form";
 import { Reveal } from "@/components/reveal";
 import {
@@ -103,16 +103,17 @@ export default async function HomePage() {
   return (
     <>
       {/* 1 — Hero */}
-      <Section className="overflow-hidden pb-8 pt-14 sm:pb-16 sm:pt-24">
-        <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_minmax(0,0.9fr)] lg:gap-12">
-          <div>
+      <Section className="overflow-hidden pb-10 pt-10 sm:pb-20 sm:pt-20">
+        <div className="relative grid items-center gap-8 lg:grid-cols-[1.1fr_minmax(0,0.9fr)] lg:gap-12">
+          <div className="absolute -left-20 top-16 size-44 rounded-full bg-terracotta opacity-55 sm:-left-40 sm:top-8 sm:size-64" aria-hidden="true" />
+          <div className="relative">
             {hero.announcement ? (
               <Pill tone="outline" className="mb-6">
                 <span className="size-1.5 rounded-full bg-mint" aria-hidden="true" />
                 {hero.announcement}
               </Pill>
             ) : null}
-            <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-6xl">
+            <h1 className="max-w-3xl text-balance text-5xl font-semibold tracking-[-0.055em] sm:text-7xl">
               {hero.headline}
             </h1>
             <p className="mt-5 max-w-xl text-pretty text-lg text-ink-secondary">
@@ -127,24 +128,17 @@ export default async function HomePage() {
               </KipButton>
             </div>
           </div>
-          <OrbitSystem className="mx-auto -mb-6 w-full max-w-[420px] lg:mb-0 lg:max-w-none" />
+          <div className="relative border-2 border-ink bg-cocoa p-5 sm:p-8">
+            <div className="absolute -right-8 -top-8 size-28 rounded-full bg-pink" aria-hidden="true" />
+            <OrbitSystem className="relative mx-auto w-full max-w-[420px] text-ink lg:max-w-none" />
+          </div>
         </div>
       </Section>
 
-      {/* 2 — Interactive simulated demo */}
-      <Section id="demo" className="py-14 sm:py-24">
+      {/* 2 — Real captured product screens, no synthetic handset chrome. */}
+      <Section id="demo" className="border-y-2 border-ink bg-lilac py-14 text-[#1b1722] sm:py-24">
         <Reveal>
-          <SectionHeader
-            center
-            kicker="Interactive demo"
-            title="Watch a run, then drive it yourself"
-            lead="Tap a prompt, switch model lanes, and watch a run stream in — the same rhythm as the real app."
-          />
-        </Reveal>
-        <Reveal delay={120}>
-          <div className="mt-10 sm:mt-14">
-            <PhoneDemo />
-          </div>
+          <InteractiveProductWalkthrough />
         </Reveal>
       </Section>
 

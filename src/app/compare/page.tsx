@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Kicker, KipCard, Pill, RoadmapBadge, Section, SectionHeader } from "@/components/ui";
+import { Kicker, KipCard, Pill, RoadmapBadge, Section, SectionHeader, PageHeader } from "@/components/ui";
 import { Reveal } from "@/components/reveal";
 
 export const metadata: Metadata = {
@@ -307,7 +307,7 @@ export default function ComparePage() {
       {/* Intro */}
       <Section>
         <Reveal>
-          <SectionHeader
+          <PageHeader
             kicker="How Kip compares"
             title="Different tools for different jobs"
             lead="Kip isn’t a model, and it isn’t trying to replace the companies that make them. It works with the providers’ models through your own API keys. ChatGPT, Claude Code, and Codex are excellent at what they do — this page maps where each one shines, sources included."

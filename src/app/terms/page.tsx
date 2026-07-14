@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Section, SectionHeader } from "@/components/ui";
+import { Section, PageHeader } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <Section className="py-16 sm:py-24">
-      <SectionHeader kicker="Legal" title="Terms of Service" lead="Effective July 11, 2026." />
+      <PageHeader kicker="Legal" title="Terms of Service" lead="Effective July 11, 2026." />
 
       <div className="mt-10 max-w-2xl space-y-10 text-[15px] leading-relaxed text-ink-secondary">
         <p>

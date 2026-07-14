@@ -3,8 +3,7 @@
 /*
   AgentKip design tokens — source of truth: KipTheme.swift / KipBrand.swift
   Kip Charcoal (dark, default) + Kip Cream (light).
-  Rules: flat fills, no gradients (sole exception: the Siri-glow focus sweep),
-  radii 14/10/pill, 1px hairlines, quiet-premium.
+  Rules: flat fills, no gradients, 1px hairlines, sharp editorial geometry.
 */
 
 :root {
@@ -27,7 +26,9 @@
   --pink: #efaac0;
   --peach: #ff9d7a;
   --lilac: #c5aef2;
-  --butter: #f2cf87;
+  --terracotta: #d9785f;
+  --cocoa: #6b4b3e;
+  --butter: #d8b469;
 
   --success: #7fd8b1;
   --warning: #f2cf87;
@@ -43,8 +44,8 @@
   --ink: #262624;
   --ink-secondary: #5c5b54;
   --ink-muted: #8a887c;
-  --accent: #2e9e73;
-  --on-accent: #ffffff;
+  --accent: #237757;
+  --on-accent: #262624;
   --user-bubble: #ddeee5;
 }
 
@@ -65,6 +66,8 @@
   --color-pink: var(--pink);
   --color-peach: var(--peach);
   --color-lilac: var(--lilac);
+  --color-terracotta: var(--terracotta);
+  --color-cocoa: var(--cocoa);
   --color-butter: var(--butter);
   --color-success: var(--success);
   --color-warning: var(--warning);
@@ -74,7 +77,7 @@
   --radius-small: 10px;
 
   --font-sans: var(--font-system);
-  --font-display: var(--font-gugi), var(--font-system);
+  --font-display: var(--font-system);
 }
 
 html {
@@ -101,56 +104,15 @@ body {
   color: var(--on-accent);
 }
 
-/* ---- Siri-glow: the one sanctioned gradient. Pastel edge sweep on focus. ---- */
-@property --kip-glow-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 45deg;
+/* A single, unmistakable keyboard target in both themes. */
+:focus-visible {
+  outline: 2px solid var(--sky);
+  outline-offset: 3px;
 }
 
-.siri-glow {
-  position: relative;
-}
-
-.siri-glow::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  padding: 2px;
-  background: conic-gradient(
-    from var(--kip-glow-angle),
-    var(--sky),
-    var(--lilac),
-    var(--pink),
-    var(--peach),
-    var(--sky)
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.35s ease;
-  pointer-events: none;
-}
-
-.siri-glow:focus-within::before {
-  opacity: 0.9;
-  animation: kip-glow-sweep 3.2s linear infinite;
-}
-
-@keyframes kip-glow-sweep {
-  to {
-    --kip-glow-angle: 405deg;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .siri-glow:focus-within::before {
-    animation: none; /* freeze at 45deg, matching KipSiriGlow's Reduce Motion behavior */
-  }
+.siri-glow:focus-within {
+  outline: 2px solid var(--sky);
+  outline-offset: 3px;
 }
 
 /* ---- Orbit drift for the hero Saturn system ---- */
@@ -212,6 +174,11 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
 }
+
+.kip-offset-shadow {
+  box-shadow: 5px 5px 0 var(--cocoa);
+}
+
 
 .kip-press {
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);

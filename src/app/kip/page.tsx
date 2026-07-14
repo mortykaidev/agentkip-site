@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { OrbitMark, StatusGlyph, type GlyphState } from "@/components/brand";
-import { Section, SectionHeader, KipCard, Kicker } from "@/components/ui";
+import { Section, SectionHeader, KipCard, Kicker, PageHeader } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Kip's Corner",
@@ -44,7 +44,7 @@ export default function KipCornerPage() {
   return (
     <>
       <Section className="py-16 sm:py-24">
-        <SectionHeader
+        <PageHeader
           kicker="Kip's Corner"
           title="The little planet with a plan"
           lead="Kip is a lowercase k with a seafoam moon in permanent orbit — here's the thinking behind it."

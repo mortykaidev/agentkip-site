@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Kicker, KipCard, Pill, Section, SectionHeader } from "@/components/ui";
+import { Kicker, KipCard, Pill, Section, SectionHeader, PageHeader } from "@/components/ui";
 import { StatusGlyph } from "@/components/brand";
 import { Reveal } from "@/components/reveal";
 
@@ -108,7 +108,7 @@ export default function SecurityPage() {
       {/* Principles */}
       <Section>
         <Reveal>
-          <SectionHeader
+          <PageHeader
             kicker="Security"
             title="Honest by default"
             lead="Three principles drive every decision here: your keys and conversations live on your server, not ours. The app is a thin client — it holds a pairing token and nothing else sensitive. And when there’s a real risk, we’d rather disclose it plainly than polish over it."
