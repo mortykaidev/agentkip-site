@@ -1,15 +1,27 @@
 import { sql } from "drizzle-orm";
 import type { W1DatabasePort } from "./db";
-import type { EntitlementStatus, IdempotentRoute, StripeFailureCode } from "./constants";
+import { INTERNAL_REDEEM_PRINCIPAL, type EntitlementStatus, type IdempotentRoute, type StripeFailureCode } from "./constants";
 import { completionStatus, decodeIdempotencyRecord, epochDate, validateResponseMetadata, type IdempotencyRecord, type IdempotencyReservation, type MetadataForRoute } from "./idempotency";
 
 export interface EntitlementViewRow { id: string; clerkSubject: string; product: "agentkip_first_friend"; status: Exclude<EntitlementStatus, "inactive">; source: "stripe_subscription"; grantedAt: Date | null; revokedAt: Date | null; updatedAt: Date; stripeCustomerId: string; stripeCheckoutSessionId: string | null; stripeSubscriptionId: string; lastEventCreatedAt: Date; lastEventPrecedence: number; lastStripeEventId: string; }
 export interface CheckoutIntentRow { id: string; requestIdempotencyId: string; clerkSubject: string; product: "agentkip_first_friend"; configuredPriceId: string; configuredStripeProductId: string; stripeCustomerId: string | null; stripeCheckoutSessionId: string | null; stripeSubscriptionId: string | null; }
 export interface BillingCustomerRow { clerkSubject: string; stripeCustomerId: string; }
 export interface ClaimRow { id: string; entitlementId: string; clerkSubject: string; product: "agentkip_first_friend"; claimHash: string; pepperVersion: number; status: "active" | "consumed" | "expired" | "revoked"; expiresAt: Date; redemptionId: string | null; consumedAt: Date | null; revokedAt: Date | null; revokeReason: string | null; }
+export interface ClaimRedemptionMetadata { redemption_id: string; subject: string; entitlement: string; product: "tester"; }
+export interface ClaimRedemptionOperationRow { id: string; principal: typeof INTERNAL_REDEEM_PRINCIPAL; idempotencyKey: string; requestDigest: string; responseStatus: 200; responseMetadata: ClaimRedemptionMetadata; /** Retention coordinate only; replay remains valid until a coordinated deletion policy removes the row. */ expiresAt: Date; createdAt: Date; updatedAt: Date; }
+export type NewClaimRedemptionOperation = Omit<ClaimRedemptionOperationRow, "id" | "createdAt" | "updatedAt">;
 export interface StripeEventRow { stripeEventId: string; eventType: string; eventCreatedAt: Date; status: "received" | "processing" | "processed" | "ignored" | "retryable_failed" | "terminal_failed"; attemptCount: number; failureCode: StripeFailureCode | null; }
 export interface WebhookEventRow extends StripeEventRow { processedAt: Date | null; nextRetryAt: Date | null; }
 export interface WebhookEntitlementInput { clerkSubject: string; customerId: string; sessionId: string; subscriptionId: string; status: Exclude<EntitlementStatus, "inactive">; eventId: string; eventCreatedAt: Date; eventPrecedence: number; reasonCode: "checkout_completed" | "subscription_created" | "subscription_updated" | "subscription_deleted" | "invoice_paid" | "invoice_payment_failed"; }
+export interface W1ClaimRedemptionRepositoryTx {
+  readClaim(id: string): Promise<ClaimRow | null>;
+  readClaimRedemptionOperation(principal: typeof INTERNAL_REDEEM_PRINCIPAL, key: string): Promise<ClaimRedemptionOperationRow | null>;
+  insertClaimRedemptionOperation(input: NewClaimRedemptionOperation): Promise<void>;
+}
+export const claimRedemptionRepositoryTx = (tx: W1RepositoryTx): W1ClaimRedemptionRepositoryTx | null => {
+  const value = tx as W1RepositoryTx & Partial<W1ClaimRedemptionRepositoryTx>;
+  return typeof value.readClaim === "function" && typeof value.readClaimRedemptionOperation === "function" && typeof value.insertClaimRedemptionOperation === "function" ? value as W1ClaimRedemptionRepositoryTx : null;
+};
 /** Deliberately separate from W1RepositoryTx so frozen claim fixtures stay narrow. */
 export interface W1WebhookRepositoryTx {
   readWebhookEvent(id: string): Promise<WebhookEventRow | null>;
@@ -40,7 +52,7 @@ export interface W1RepositoryTx {
   lockCurrentClaim(subject: string, entitlementId: string): Promise<ClaimRow | null>;
   insertClaim(row: ClaimRow): Promise<void>;
   updateClaim(row: ClaimRow): Promise<void>;
-  consumeClaim(id: string): Promise<string | null>;
+  consumeClaim(id: string, notExpiredAfter: Date): Promise<string | null>;
   acquireAdvisoryLock(key: string): Promise<void>;
   countRecentAttempts(hash: string): Promise<number>;
   insertAttempt(hash: string, action: "issue" | "reissue"): Promise<void>;
@@ -64,6 +76,22 @@ const exactRow = (value: unknown, keys: readonly string[], label: string): Recor
 const identifier = (value: unknown, prefix: string, label: string) => { if (typeof value !== "string" || !new RegExp(`^${prefix}[A-Za-z0-9]+$`).test(value)) throw new TypeError(label); return value; };
 const uuid = (value: unknown, label: string) => { if (typeof value !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value)) throw new TypeError(label); return value; };
 const subject = (value: unknown, label: string) => { if (typeof value !== "string" || value.length === 0) throw new TypeError(label); return value; };
+export const validateClaimRedemptionMetadata = (raw: unknown): ClaimRedemptionMetadata => {
+  const label = "invalid claim redemption metadata";
+  const row = exactRow(raw, ["redemption_id", "subject", "entitlement", "product"], label);
+  if (typeof row.subject !== "string" || !/^[A-Za-z0-9_-]{1,255}$/.test(row.subject) || row.product !== "tester") throw new TypeError(label);
+  return { redemption_id: uuid(row.redemption_id, label), subject: row.subject, entitlement: uuid(row.entitlement, label), product: "tester" };
+};
+const decodeClaimRedemptionOperation = (raw: unknown, expected: { principal: typeof INTERNAL_REDEEM_PRINCIPAL; idempotencyKey: string }): ClaimRedemptionOperationRow => {
+  const label = "invalid claim redemption operation row";
+  const row = exactRow(raw, ["id", "principal", "idempotencyKey", "requestDigest", "responseStatus", "responseMetadata", "expiresAt", "createdAt", "updatedAt"], label);
+  const key = row.idempotencyKey;
+  const digest = row.requestDigest;
+  const expiresAt = epochDate(row.expiresAt); const createdAt = epochDate(row.createdAt); const updatedAt = epochDate(row.updatedAt);
+  const id = uuid(row.id, label);
+  if (row.principal !== expected.principal || key !== expected.idempotencyKey || typeof key !== "string" || !/^[A-Za-z0-9._:-]{8,128}$/.test(key) || typeof digest !== "string" || !/^[0-9a-f]{64}$/.test(digest) || row.responseStatus !== 200 || !expiresAt || !createdAt || !updatedAt || expiresAt.getTime() <= createdAt.getTime() || updatedAt.getTime() < createdAt.getTime()) throw new TypeError(label);
+  return { id, principal: INTERNAL_REDEEM_PRINCIPAL, idempotencyKey: key, requestDigest: digest, responseStatus: 200, responseMetadata: validateClaimRedemptionMetadata(row.responseMetadata), expiresAt, createdAt, updatedAt };
+};
 const decodeCustomer = (raw: unknown, expectedSubject: string): BillingCustomerRow => { const label = "invalid billing customer row"; const row = exactRow(raw, ["clerkSubject", "stripeCustomerId"], label); if (subject(row.clerkSubject, label) !== expectedSubject || expectedSubject.length === 0) throw new TypeError(label); return { clerkSubject: expectedSubject, stripeCustomerId: identifier(row.stripeCustomerId, "cus_", label) }; };
 const decodeIntent = (raw: unknown, expected?: { requestIdempotencyId: string; clerkSubject: string; configuredPriceId: string; configuredStripeProductId: string }): CheckoutIntentRow => {
   const label = "invalid checkout intent row"; const row = exactRow(raw, ["id", "requestIdempotencyId", "clerkSubject", "product", "configuredPriceId", "configuredStripeProductId", "stripeCustomerId", "stripeCheckoutSessionId", "stripeSubscriptionId"], label);
@@ -111,6 +139,7 @@ const decodeWebhookEvent = (raw: unknown, expectedId: string): WebhookEventRow =
 export function createW1Repository(database: W1DatabasePort): W1Repository {
   const transaction = <T>(work: (tx: W1RepositoryTx) => Promise<T>) => database.transaction(async (tx) => {
     const query = async <TRow extends object>(statement: ReturnType<typeof sql>) => one<TRow>(tx.execute(statement));
+    const claimColumns = sql`id, entitlement_id as "entitlementId", clerk_subject as "clerkSubject", product, claim_hash as "claimHash", pepper_version as "pepperVersion", status, (extract(epoch from expires_at) * 1000)::double precision as "expiresAt", redemption_id as "redemptionId", (extract(epoch from consumed_at) * 1000)::double precision as "consumedAt", (extract(epoch from revoked_at) * 1000)::double precision as "revokedAt", revoke_reason as "revokeReason"`;
     const adapter: W1RepositoryTx = {
       readIdempotency: async <R extends IdempotentRoute>(route: R, principal: string, key: string) => {
         const record = await query<Record<string, unknown>>(sql`select id, route, principal, idempotency_key as "idempotencyKey", request_digest as "requestDigest", status, response_status as "responseStatus", response_metadata as "responseMetadata", (extract(epoch from locked_until) * 1000)::double precision as "lockedUntil", (extract(epoch from expires_at) * 1000)::double precision as "expiresAt" from request_idempotency where route=${route} and principal=${principal} and idempotency_key=${key} for update`);
@@ -152,10 +181,24 @@ export function createW1Repository(database: W1DatabasePort): W1Repository {
         if (!row) throw new Error("checkout intent provider disagreement");
         const decoded = decodeIntent(row); if (decoded.stripeCheckoutSessionId !== session || decoded.stripeSubscriptionId !== subscription) throw new Error("checkout intent provider disagreement"); return decoded;
       },
-      lockClaim: async (id) => { const row = await query<Record<string, unknown>>(sql`select id, entitlement_id as "entitlementId", clerk_subject as "clerkSubject", product, claim_hash as "claimHash", pepper_version as "pepperVersion", status, (extract(epoch from expires_at) * 1000)::double precision as "expiresAt", redemption_id as "redemptionId", (extract(epoch from consumed_at) * 1000)::double precision as "consumedAt", (extract(epoch from revoked_at) * 1000)::double precision as "revokedAt", revoke_reason as "revokeReason" from bootstrap_claims where id=${id} for update`); return row ? decodeClaim(row) : null; }, lockCurrentClaim: async (subject, entitlement) => { const row = await query<Record<string, unknown>>(sql`select id, entitlement_id as "entitlementId", clerk_subject as "clerkSubject", product, claim_hash as "claimHash", pepper_version as "pepperVersion", status, (extract(epoch from expires_at) * 1000)::double precision as "expiresAt", redemption_id as "redemptionId", (extract(epoch from consumed_at) * 1000)::double precision as "consumedAt", (extract(epoch from revoked_at) * 1000)::double precision as "revokedAt", revoke_reason as "revokeReason" from bootstrap_claims where clerk_subject=${subject} and entitlement_id=${entitlement} and status='active' for update`); return row ? decodeClaim(row) : null; },
-      insertClaim: async (row) => { await tx.execute(sql`insert into bootstrap_claims (id, entitlement_id, clerk_subject, product, claim_hash, pepper_version, status, expires_at, updated_at) values (${row.id}, ${row.entitlementId}, ${row.clerkSubject}, ${row.product}, ${row.claimHash}, ${row.pepperVersion}, ${row.status}, ${row.expiresAt}, now())`); }, updateClaim: async (row) => { await tx.execute(sql`update bootstrap_claims set status=${row.status}, consumed_at=${row.consumedAt}, redemption_id=${row.redemptionId}, revoked_at=${row.revokedAt}, revoke_reason=${row.revokeReason}, updated_at=now() where id=${row.id}`); }, consumeClaim: async (id) => { const row = await query<{ redemptionId: string }>(sql`update bootstrap_claims set status='consumed', consumed_at=now(), redemption_id=gen_random_uuid(), updated_at=now() where id=${id} and status='active' returning redemption_id as "redemptionId"`); return row?.redemptionId ?? null; },
+      lockClaim: async (id) => { const row = await query<Record<string, unknown>>(sql`select ${claimColumns} from bootstrap_claims where id=${id} for update`); return row ? decodeClaim(row) : null; }, lockCurrentClaim: async (subject, entitlement) => { const row = await query<Record<string, unknown>>(sql`select ${claimColumns} from bootstrap_claims where clerk_subject=${subject} and entitlement_id=${entitlement} and status='active' for update`); return row ? decodeClaim(row) : null; },
+      insertClaim: async (row) => { await tx.execute(sql`insert into bootstrap_claims (id, entitlement_id, clerk_subject, product, claim_hash, pepper_version, status, expires_at, updated_at) values (${row.id}, ${row.entitlementId}, ${row.clerkSubject}, ${row.product}, ${row.claimHash}, ${row.pepperVersion}, ${row.status}, ${row.expiresAt}, now())`); }, updateClaim: async (row) => { await tx.execute(sql`update bootstrap_claims set status=${row.status}, consumed_at=${row.consumedAt}, redemption_id=${row.redemptionId}, revoked_at=${row.revokedAt}, revoke_reason=${row.revokeReason}, updated_at=now() where id=${row.id}`); }, consumeClaim: async (id, notExpiredAfter) => { const row = await query<Record<string, unknown>>(sql`update bootstrap_claims set status='consumed', consumed_at=now(), redemption_id=gen_random_uuid(), updated_at=now() where id=${id} and status='active' and expires_at > ${notExpiredAfter} returning redemption_id as "redemptionId"`); if (!row) return null; return uuid(exactRow(row, ["redemptionId"], "invalid redemption row").redemptionId, "invalid redemption row"); },
       acquireAdvisoryLock: async (key) => { await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${key}))`); }, countRecentAttempts: async (hash) => Number((await query<{ count: number }>(sql`select count(*)::int as count from bootstrap_claim_attempts where source_ip_hash=${hash} and created_at >= now() - interval '15 minutes'`))?.count ?? 0), insertAttempt: async (hash, action) => { await tx.execute(sql`insert into bootstrap_claim_attempts (source_ip_hash, action) values (${hash}, ${action})`); }, countRecentClaims: async (subject, entitlement) => Number((await query<{ count: number }>(sql`select count(*)::int as count from bootstrap_claims where clerk_subject=${subject} and entitlement_id=${entitlement} and created_at >= now() - interval '15 minutes'`))?.count ?? 0), countRecentRevokes: async (subject) => Number((await query<{ count: number }>(sql`select count(*)::int as count from request_idempotency where principal=${subject} and route='/api/bootstrap-claims/[claim_id]/revoke' and created_at >= now() - interval '15 minutes'`))?.count ?? 0),
       insertEvent: (event) => query<StripeEventRow>(sql`insert into stripe_events (stripe_event_id, event_type, event_created_at, status, attempt_count, failure_code, updated_at) values (${event.stripeEventId}, ${event.eventType}, ${event.eventCreatedAt}, ${event.status}, ${event.attemptCount}, ${event.failureCode}, now()) on conflict (stripe_event_id) do nothing returning stripe_event_id as "stripeEventId", event_type as "eventType", event_created_at as "eventCreatedAt", status, attempt_count as "attemptCount", failure_code as "failureCode"`), updateEvent: async (event) => { await tx.execute(sql`update stripe_events set status=${event.status}, attempt_count=${event.attemptCount}, failure_code=${event.failureCode}, updated_at=now() where stripe_event_id=${event.stripeEventId}`); }, revokeActiveClaims: async (entitlement) => { await tx.execute(sql`update bootstrap_claims set status='revoked', revoked_at=now(), revoke_reason='entitlement_inactive', updated_at=now() where entitlement_id=${entitlement} and status='active'`); },
+    };
+    const redemptionAdapter: W1ClaimRedemptionRepositoryTx = {
+      readClaim: async (id) => { const row = await query<Record<string, unknown>>(sql`select ${claimColumns} from bootstrap_claims where id=${id}`); return row ? decodeClaim(row) : null; },
+      readClaimRedemptionOperation: async (principal, key) => {
+        const row = await query<Record<string, unknown>>(sql`select id, principal, idempotency_key as "idempotencyKey", request_digest as "requestDigest", response_status as "responseStatus", response_metadata as "responseMetadata", (extract(epoch from expires_at) * 1000)::double precision as "expiresAt", (extract(epoch from created_at) * 1000)::double precision as "createdAt", (extract(epoch from updated_at) * 1000)::double precision as "updatedAt" from bootstrap_claim_redemptions where principal=${principal} and idempotency_key=${key}`);
+        return row ? decodeClaimRedemptionOperation(row, { principal, idempotencyKey: key }) : null;
+      },
+      insertClaimRedemptionOperation: async (input) => {
+        const key = input.idempotencyKey; const digest = input.requestDigest; const expiresAt = input.expiresAt;
+        if (input.principal !== INTERNAL_REDEEM_PRINCIPAL || typeof key !== "string" || !/^[A-Za-z0-9._:-]{8,128}$/.test(key) || typeof digest !== "string" || !/^[0-9a-f]{64}$/.test(digest) || input.responseStatus !== 200 || !(expiresAt instanceof Date) || !Number.isFinite(expiresAt.getTime())) throw new TypeError("invalid claim redemption operation");
+        const metadata = validateClaimRedemptionMetadata(input.responseMetadata);
+        const row = await query<{ id: string; principal: string; idempotencyKey: string }>(sql`insert into bootstrap_claim_redemptions (principal, idempotency_key, request_digest, response_status, response_metadata, expires_at, updated_at) values (${input.principal}, ${key}, ${digest}, ${input.responseStatus}, ${JSON.stringify(metadata)}::jsonb, ${expiresAt}, now()) returning id, principal, idempotency_key as "idempotencyKey"`);
+        if (!row || uuid(row.id, "invalid claim redemption row") !== row.id || row.principal !== INTERNAL_REDEEM_PRINCIPAL || row.idempotencyKey !== key) throw new Error("claim redemption operation insert did not return exactly one row");
+      },
     };
     const eventColumns = sql`stripe_event_id as "stripeEventId", event_type as "eventType", (extract(epoch from event_created_at) * 1000)::double precision as "eventCreatedAt", status, attempt_count as "attemptCount", (extract(epoch from processed_at) * 1000)::double precision as "processedAt", (extract(epoch from next_retry_at) * 1000)::double precision as "nextRetryAt", failure_code as "failureCode"`;
     const webhookAdapter: W1WebhookRepositoryTx = {
@@ -191,7 +234,7 @@ export function createW1Repository(database: W1DatabasePort): W1Repository {
         return { entitlement, applied: true };
       },
     };
-    Object.assign(adapter as object, webhookAdapter);
+    Object.assign(adapter as object, redemptionAdapter, webhookAdapter);
     return work(adapter);
   });
   return {

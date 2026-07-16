@@ -12,11 +12,12 @@ const migrations = [
   "drizzle/0000_site_baseline.sql",
   "drizzle/0001_w1_billing_entitlement.sql",
   "drizzle/0002_w1_constraint_repair.sql",
+  "drizzle/0003_w1_redemption_recovery.sql",
 ];
 const containers: Array<Awaited<ReturnType<PostgreSqlContainer["start"]>>> = [];
 
 const expectedTableNames = [
-  "billing_checkout_intents", "billing_customers", "bootstrap_claim_attempts", "bootstrap_claims", "contact_messages", "content_sections",
+  "billing_checkout_intents", "billing_customers", "bootstrap_claim_attempts", "bootstrap_claim_redemptions", "bootstrap_claims", "contact_messages", "content_sections",
   "entitlement_transitions", "entitlements", "request_idempotency", "stripe_events", "waitlist",
 ];
 
@@ -45,6 +46,13 @@ const expectedConstraints = [
   "bootstrap_claim_attempts:bootstrap_claim_attempts_action_check:c",
   "bootstrap_claim_attempts:bootstrap_claim_attempts_ip_hash_check:c",
   "bootstrap_claim_attempts:bootstrap_claim_attempts_pkey:p",
+  "bootstrap_claim_redemptions:bootstrap_claim_redemptions_digest_check:c",
+  "bootstrap_claim_redemptions:bootstrap_claim_redemptions_expiry_check:c",
+  "bootstrap_claim_redemptions:bootstrap_claim_redemptions_key_check:c",
+  "bootstrap_claim_redemptions:bootstrap_claim_redemptions_metadata_check:c",
+  "bootstrap_claim_redemptions:bootstrap_claim_redemptions_pkey:p",
+  "bootstrap_claim_redemptions:bootstrap_claim_redemptions_principal_check:c",
+  "bootstrap_claim_redemptions:bootstrap_claim_redemptions_status_check:c",
   "bootstrap_claims:bootstrap_claims_claim_hash_unique:u",
   "bootstrap_claims:bootstrap_claims_entitlement_id_entitlements_id_fk:f",
   "bootstrap_claims:bootstrap_claims_expiry_check:c",
@@ -85,7 +93,7 @@ const expectedConstraints = [
 ];
 
 const expectedApplicationIndexes = [
-  "bootstrap_claim_attempts_ip_created_idx", "bootstrap_claims_active_subject_entitlement_unique", "entitlements_active_subject_product_unique",
+  "bootstrap_claim_attempts_ip_created_idx", "bootstrap_claim_redemptions_expiry_idx", "bootstrap_claim_redemptions_principal_key_unique", "bootstrap_claims_active_subject_entitlement_unique", "entitlements_active_subject_product_unique",
   "entitlements_subject_product_unique", "request_idempotency_expiry_idx", "request_idempotency_processing_lease_idx",
   "request_idempotency_route_principal_key_unique", "stripe_events_status_retry_updated_idx",
 ];
@@ -322,6 +330,8 @@ describe("W1 bootstrap claim repository decoders", () => {
       await applyMigrations(client);
       const { createW1Repository } = await import("@/lib/w1/repository");
       const { createW1Services } = await import("@/lib/w1/services");
+      const { BOOTSTRAP_CLAIM_REDEEM_ROUTE, INTERNAL_REDEEM_PRINCIPAL } = await import("@/lib/w1/constants");
+      const { digestRequest } = await import("@/lib/w1/crypto");
       const subject = "claimdb-subject";
       const { rows: [{ now }] } = await client.query<{ now: Date }>("select now() as now");
       await client.query("insert into billing_customers (clerk_subject, stripe_customer_id) values ($1, 'cus_claimdb')", [subject]);
@@ -332,11 +342,149 @@ describe("W1 bootstrap claim repository decoders", () => {
       expect(issued.claim).toMatch(/^akc1\./);
       const reissued = await services.reissueClaim(subject, issued.claim_id, "claimdb-reissue-key", "f".repeat(64), "c".repeat(64));
       expect(reissued.claim_id).not.toBe(issued.claim_id);
-      const redeemed = await services.redeemClaim(reissued.claim);
+      const redeemKey = "claimdb-redeem-key";
+      const redeemDigest = digestRequest("POST", BOOTSTRAP_CLAIM_REDEEM_ROUTE, { claim: reissued.claim });
+      const redeemed = await services.redeemClaim(reissued.claim, redeemKey, redeemDigest);
       expect(redeemed).toMatchObject({ subject, product: "tester" });
-      await expect(services.redeemClaim(reissued.claim)).rejects.toMatchObject({ code: "claim_not_found" });
+      await expect(services.redeemClaim(reissued.claim, redeemKey, redeemDigest)).resolves.toEqual(redeemed);
+      await expect(services.redeemClaim(reissued.claim, redeemKey, "0".repeat(64))).rejects.toMatchObject({ code: "idempotency_conflict" });
+      await expect(services.redeemClaim(reissued.claim, "claimdb-other-key", redeemDigest)).rejects.toMatchObject({ code: "claim_not_found" });
+      const redemptionRows = await client.query<{ id: string; principal: string; response_metadata: unknown }>("select id, principal, response_metadata from bootstrap_claim_redemptions");
+      expect(redemptionRows.rows[0]?.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+      expect(redemptionRows.rows.map(({ principal, response_metadata }) => ({ principal, response_metadata }))).toEqual([{ principal: INTERNAL_REDEEM_PRINCIPAL, response_metadata: redeemed }]);
+      expect(JSON.stringify(redemptionRows.rows)).not.toContain(reissued.claim);
       await expect(services.revokeClaim(subject, issued.claim_id, "claimdb-revoke-key", "a".repeat(64))).resolves.toMatchObject({ claim_id: issued.claim_id, status: "revoked" });
     } finally { await client.end(); }
+  }, 30_000);
+
+  it("serializes concurrent redemption and preserves one replayable non-secret result", async () => {
+    const first = await createClient();
+    const second = await secondClientFor(first);
+    try {
+      await applyMigrations(first);
+      const { createW1Repository } = await import("@/lib/w1/repository");
+      const { createW1Services } = await import("@/lib/w1/services");
+      const { BOOTSTRAP_CLAIM_REDEEM_ROUTE, INTERNAL_REDEEM_PRINCIPAL } = await import("@/lib/w1/constants");
+      const { digestRequest } = await import("@/lib/w1/crypto");
+      const subject = "claimdb-race-subject";
+      const { rows: [{ now }] } = await first.query<{ now: Date }>("select now() as now");
+      await first.query("insert into billing_customers (clerk_subject, stripe_customer_id) values ($1, 'cus_claimdbrace')", [subject]);
+      await first.query("insert into stripe_events (stripe_event_id, event_type, event_created_at, status, attempt_count, processed_at, failure_code) values ('evt_claimdbrace', 'checkout.session.completed', $1, 'processed', 1, $1, null)", [now]);
+      await first.query("insert into entitlements (clerk_subject, product, status, source, stripe_customer_id, stripe_checkout_session_id, stripe_subscription_id, last_stripe_event_id, last_event_created_at, last_event_precedence, granted_at, revoked_at, updated_at) values ($1, 'agentkip_first_friend', 'active', 'stripe_subscription', 'cus_claimdbrace', 'cs_test_claimdbrace', 'sub_claimdbrace', 'evt_claimdbrace', $2, 10, $2, null, now())", [subject, now]);
+      const one = createW1Services({ repository: createW1Repository(c2Port(first)), clock: { now: () => now }, claimPepper: "claimdb-race-pepper", rateLimitPepper: "claimdb-race-rate" });
+      const two = createW1Services({ repository: createW1Repository(c2Port(second)), clock: { now: () => now }, claimPepper: "claimdb-race-pepper", rateLimitPepper: "claimdb-race-rate" });
+      const issued = await one.issueClaim(subject, "claimdb-race-issue", "e".repeat(64), "c".repeat(64));
+      const requestDigest = digestRequest("POST", BOOTSTRAP_CLAIM_REDEEM_ROUTE, { claim: issued.claim });
+      const keys = ["claimdb-race-key-a", "claimdb-race-key-b"] as const;
+      const settled = await Promise.allSettled([one.redeemClaim(issued.claim, keys[0], requestDigest), two.redeemClaim(issued.claim, keys[1], requestDigest)]);
+      const winners = settled.filter((result): result is PromiseFulfilledResult<import("@/lib/w1/services").ClaimRedeemResponse> => result.status === "fulfilled");
+      const losers = settled.filter((result): result is PromiseRejectedResult => result.status === "rejected");
+      expect(winners).toHaveLength(1);
+      expect(losers).toHaveLength(1);
+      expect(losers[0]?.reason).toMatchObject({ code: "claim_not_found" });
+      const winnerIndex = settled.findIndex((result) => result.status === "fulfilled");
+      const winnerKey = keys[winnerIndex];
+      if (!winnerKey || !winners[0]) throw new Error("redemption winner missing");
+      await expect(one.redeemClaim(issued.claim, winnerKey, requestDigest)).resolves.toEqual(winners[0].value);
+      await expect(one.redeemClaim(issued.claim, winnerKey, "f".repeat(64))).rejects.toMatchObject({ code: "idempotency_conflict" });
+      const rows = await first.query<{ principal: string; idempotency_key: string; request_digest: string; response_status: number; response_metadata: unknown }>("select principal, idempotency_key, request_digest, response_status, response_metadata from bootstrap_claim_redemptions");
+      expect(rows.rows).toEqual([{ principal: INTERNAL_REDEEM_PRINCIPAL, idempotency_key: winnerKey, request_digest: requestDigest, response_status: 200, response_metadata: winners[0].value }]);
+      const persisted = await first.query("select claim_hash, redemption_id, status from bootstrap_claims where id=$1", [issued.claim_id]);
+      expect(persisted.rows).toHaveLength(1);
+      expect(persisted.rows[0]).toMatchObject({ status: "consumed", redemption_id: winners[0].value.redemption_id });
+      expect(JSON.stringify({ idempotency: rows.rows, claims: persisted.rows })).not.toContain(issued.claim);
+    } finally {
+      await second.end();
+      await first.end();
+    }
+  }, 30_000);
+
+  it("recovers one concurrent same-key redemption from the committed non-secret row", async () => {
+    const first = await createClient();
+    const second = await secondClientFor(first);
+    try {
+      await applyMigrations(first);
+      const { createW1Repository } = await import("@/lib/w1/repository");
+      const { createW1Services } = await import("@/lib/w1/services");
+      const { BOOTSTRAP_CLAIM_REDEEM_ROUTE, INTERNAL_REDEEM_PRINCIPAL } = await import("@/lib/w1/constants");
+      const { digestRequest } = await import("@/lib/w1/crypto");
+      const subject = "claimdb-same-key-subject";
+      const { rows: [{ now }] } = await first.query<{ now: Date }>("select now() as now");
+      await first.query("insert into billing_customers (clerk_subject, stripe_customer_id) values ($1, 'cus_claimdbsamekey')", [subject]);
+      await first.query("insert into stripe_events (stripe_event_id, event_type, event_created_at, status, attempt_count, processed_at, failure_code) values ('evt_claimdbsamekey', 'checkout.session.completed', $1, 'processed', 1, $1, null)", [now]);
+      await first.query("insert into entitlements (clerk_subject, product, status, source, stripe_customer_id, stripe_checkout_session_id, stripe_subscription_id, last_stripe_event_id, last_event_created_at, last_event_precedence, granted_at, revoked_at, updated_at) values ($1, 'agentkip_first_friend', 'active', 'stripe_subscription', 'cus_claimdbsamekey', 'cs_test_claimdbsamekey', 'sub_claimdbsamekey', 'evt_claimdbsamekey', $2, 10, $2, null, now())", [subject, now]);
+      const one = createW1Services({ repository: createW1Repository(c2Port(first)), clock: { now: () => now }, claimPepper: "claimdb-same-key-pepper", rateLimitPepper: "claimdb-same-key-rate" });
+      const two = createW1Services({ repository: createW1Repository(c2Port(second)), clock: { now: () => now }, claimPepper: "claimdb-same-key-pepper", rateLimitPepper: "claimdb-same-key-rate" });
+      const issued = await one.issueClaim(subject, "claimdb-same-key-issue", "a".repeat(64), "b".repeat(64));
+      const key = "claimdb-same-key-redeem";
+      const requestDigest = digestRequest("POST", BOOTSTRAP_CLAIM_REDEEM_ROUTE, { claim: issued.claim });
+      const [left, right] = await Promise.all([one.redeemClaim(issued.claim, key, requestDigest), two.redeemClaim(issued.claim, key, requestDigest)]);
+
+      expect(left).toEqual(right);
+      const rows = await first.query<{ principal: string; idempotency_key: string; response_metadata: unknown }>("select principal, idempotency_key, response_metadata from bootstrap_claim_redemptions");
+      expect(rows.rows).toEqual([{ principal: INTERNAL_REDEEM_PRINCIPAL, idempotency_key: key, response_metadata: left }]);
+      const claims = await first.query<{ status: string; redemption_id: string | null }>("select status, redemption_id from bootstrap_claims where id=$1", [issued.claim_id]);
+      expect(claims.rows).toEqual([{ status: "consumed", redemption_id: left.redemption_id }]);
+      expect(JSON.stringify({ rows: rows.rows, claims: claims.rows })).not.toContain(issued.claim);
+    } finally {
+      await second.end();
+      await first.end();
+    }
+  }, 30_000);
+
+  it("races redemption against reissue without deadlock and commits one coherent outcome", async () => {
+    const first = await createClient();
+    const second = await secondClientFor(first);
+    try {
+      await applyMigrations(first);
+      const { createW1Repository } = await import("@/lib/w1/repository");
+      const { createW1Services } = await import("@/lib/w1/services");
+      const { BOOTSTRAP_CLAIM_REDEEM_ROUTE } = await import("@/lib/w1/constants");
+      const { digestRequest } = await import("@/lib/w1/crypto");
+      const subject = "claimdb-redeem-reissue-race";
+      const { rows: [{ now }] } = await first.query<{ now: Date }>("select now() as now");
+      await first.query("insert into billing_customers (clerk_subject, stripe_customer_id) values ($1, 'cus_claimdbrerace')", [subject]);
+      await first.query("insert into stripe_events (stripe_event_id, event_type, event_created_at, status, attempt_count, processed_at, failure_code) values ('evt_claimdbrerace', 'checkout.session.completed', $1, 'processed', 1, $1, null)", [now]);
+      await first.query("insert into entitlements (clerk_subject, product, status, source, stripe_customer_id, stripe_checkout_session_id, stripe_subscription_id, last_stripe_event_id, last_event_created_at, last_event_precedence, granted_at, revoked_at, updated_at) values ($1, 'agentkip_first_friend', 'active', 'stripe_subscription', 'cus_claimdbrerace', 'cs_test_claimdbrerace', 'sub_claimdbrerace', 'evt_claimdbrerace', $2, 10, $2, null, now())", [subject, now]);
+      const one = createW1Services({ repository: createW1Repository(c2Port(first)), clock: { now: () => now }, claimPepper: "claimdb-redeem-reissue-pepper", rateLimitPepper: "claimdb-redeem-reissue-rate" });
+      const two = createW1Services({ repository: createW1Repository(c2Port(second)), clock: { now: () => now }, claimPepper: "claimdb-redeem-reissue-pepper", rateLimitPepper: "claimdb-redeem-reissue-rate" });
+      const issued = await one.issueClaim(subject, "claimdb-rerace-issue", "a".repeat(64), "b".repeat(64));
+      const redeemDigest = digestRequest("POST", BOOTSTRAP_CLAIM_REDEEM_ROUTE, { claim: issued.claim });
+      const race = Promise.allSettled([
+        one.redeemClaim(issued.claim, "claimdb-rerace-redeem", redeemDigest),
+        two.reissueClaim(subject, issued.claim_id, "claimdb-rerace-reissue", "c".repeat(64), "d".repeat(64)),
+      ]);
+      let deadline: ReturnType<typeof setTimeout> | undefined;
+      const settled = await Promise.race([
+        race,
+        new Promise<never>((_resolve, reject) => { deadline = setTimeout(() => reject(new Error("redeem/reissue race deadlocked")), 5_000); }),
+      ]).finally(() => { if (deadline) clearTimeout(deadline); });
+
+      expect(settled.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+      expect(settled.filter((result) => result.status === "rejected")).toHaveLength(1);
+      const claimRows = await first.query<{ id: string; status: string; redemption_id: string | null; revoke_reason: string | null }>("select id, status, redemption_id, revoke_reason from bootstrap_claims order by created_at, id");
+      const operationCount = Number((await first.query<{ count: string }>("select count(*) from bootstrap_claim_redemptions")).rows[0]?.count ?? -1);
+      const active = claimRows.rows.filter((row) => row.status === "active");
+
+      if (settled[0]?.status === "fulfilled") {
+        expect(settled[1]).toMatchObject({ status: "rejected", reason: { code: "claim_already_consumed" } });
+        expect(claimRows.rows).toEqual([{ id: issued.claim_id, status: "consumed", redemption_id: settled[0].value.redemption_id, revoke_reason: null }]);
+        expect(operationCount).toBe(1);
+        expect(active).toHaveLength(0);
+      } else {
+        expect(settled[0]).toMatchObject({ status: "rejected", reason: { code: "claim_not_found" } });
+        expect(settled[1]?.status).toBe("fulfilled");
+        if (settled[1]?.status !== "fulfilled") throw new Error("reissue winner missing");
+        expect(claimRows.rows).toContainEqual({ id: issued.claim_id, status: "revoked", redemption_id: null, revoke_reason: "delivery_uncertain" });
+        expect(claimRows.rows).toContainEqual(expect.objectContaining({ id: settled[1].value.claim_id, status: "active", redemption_id: null, revoke_reason: null }));
+        expect(operationCount).toBe(0);
+        expect(active).toHaveLength(1);
+      }
+      expect(JSON.stringify(claimRows.rows)).not.toContain(issued.claim);
+    } finally {
+      await second.end();
+      await first.end();
+    }
   }, 30_000);
 });
 
@@ -349,10 +497,20 @@ describe("W1 additive migrations", () => {
       const enums = await client.query<{ enum_name: string; enum_value: string }>("select type.typname as enum_name, enum.enumlabel as enum_value from pg_type type join pg_enum enum on enum.enumtypid = type.oid join pg_namespace namespace on namespace.oid = type.typnamespace where namespace.nspname = 'public' order by type.typname, enum.enumsortorder");
       const constraints = await client.query<{ table_name: string; conname: string; contype: string }>("select cls.relname as table_name, con.conname, con.contype from pg_constraint con join pg_class cls on cls.oid = con.conrelid join pg_namespace namespace on namespace.oid = cls.relnamespace where namespace.nspname = 'public' and cls.relname = any($1::text[]) order by cls.relname, con.conname", [expectedTableNames]);
       const indexes = await client.query<{ index_name: string }>("select index_class.relname as index_name from pg_index index_definition join pg_class table_class on table_class.oid = index_definition.indrelid join pg_namespace namespace on namespace.oid = table_class.relnamespace join pg_class index_class on index_class.oid = index_definition.indexrelid left join pg_constraint con on con.conindid = index_definition.indexrelid where namespace.nspname = 'public' and table_class.relname = any($1::text[]) and con.oid is null order by index_class.relname", [expectedTableNames]);
+      const routeConstraint = await client.query<{ conname: string; definition: string }>("select conname, pg_get_constraintdef(oid, true) as definition from pg_constraint where conrelid='request_idempotency'::regclass and conname like 'request_idempotency_route_check%' order by conname");
       expect(tables.rows.map((row) => row.table_name)).toEqual(expectedTableNames);
       expect(enums.rows.map((row) => `${row.enum_name}|${row.enum_value}`)).toEqual(expectedEnumValues);
       expect(constraints.rows.map((row) => `${row.table_name}:${row.conname}:${row.contype}`)).toEqual(expectedConstraints);
       expect(indexes.rows.map((row) => row.index_name)).toEqual(expectedApplicationIndexes);
+      expect(routeConstraint.rows).toHaveLength(1);
+      expect(routeConstraint.rows[0]?.conname).toBe("request_idempotency_route_check");
+      expect(routeConstraint.rows[0]?.definition).not.toContain("/api/internal/bootstrap-claims/redeem");
+      await expectConstraintFailure(() => client.query("insert into request_idempotency (route, principal, idempotency_key, request_digest, locked_until, expires_at) values ('/api/internal/bootstrap-claims/redeem', 'migration-principal', 'migration-route-key', $1, now() + interval '2 minutes', now() + interval '1 day')", ["a".repeat(64)]), "request_idempotency_route_check");
+      await expectConstraintFailure(() => client.query("insert into request_idempotency (route, principal, idempotency_key, request_digest, locked_until, expires_at) values ('/api/internal/not-a-route', 'migration-principal', 'migration-bad-key', $1, now() + interval '2 minutes', now() + interval '1 day')", ["b".repeat(64)]), "request_idempotency_route_check");
+      const metadata = { redemption_id: "b0000000-b000-4000-8000-000000000002", subject: "migration_subject-1", entitlement: "c0000000-c000-4000-8000-000000000003", product: "tester" };
+      await client.query("insert into bootstrap_claim_redemptions (principal, idempotency_key, request_digest, response_status, response_metadata, expires_at) values ('agentkip-control-plane', 'migration-redeem-key', $1, 200, $2::jsonb, now() + interval '1 day')", ["c".repeat(64), JSON.stringify(metadata)]);
+      await expectConstraintFailure(() => client.query("insert into bootstrap_claim_redemptions (principal, idempotency_key, request_digest, response_status, response_metadata, expires_at) values ('other-principal', 'migration-other-key', $1, 200, $2::jsonb, now() + interval '1 day')", ["d".repeat(64), JSON.stringify(metadata)]), "bootstrap_claim_redemptions_principal_check");
+      await expectConstraintFailure(() => client.query("insert into bootstrap_claim_redemptions (principal, idempotency_key, request_digest, response_status, response_metadata, expires_at) values ('agentkip-control-plane', 'migration-unsafe-key', $1, 200, $2::jsonb, now() + interval '1 day')", ["e".repeat(64), JSON.stringify({ ...metadata, claim: "forbidden" })]), "bootstrap_claim_redemptions_metadata_check");
     } finally {
       await client.end();
     }
@@ -374,17 +532,17 @@ describe("W1 additive migrations", () => {
 });
 
 describe("W1 forward constraint repair", () => {
-  it("uses the canonical migrator on an empty database and records all three migrations", async () => {
+  it("uses the canonical migrator on an empty database and records all four migrations", async () => {
     const client = await createClient();
     try {
       await applyCanonicalMigrations(client);
-      expect((await readLedger(client)).rows.map((row) => Number(row.created_at))).toEqual([1783951023454, 1783951023728, 1783958463468]);
+      expect((await readLedger(client)).rows.map((row) => Number(row.created_at))).toEqual([1783951023454, 1783951023728, 1783958463468, 1784236425806]);
     } finally {
       await client.end();
     }
   }, 30_000);
 
-  it("applies only 0002 through the canonical migrator after recorded 0001 and preserves seeded rows", async () => {
+  it("applies 0002 and 0003 through the canonical migrator after recorded 0001 and preserves seeded rows", async () => {
     const client = await createClient();
     try {
       await applyImmutableMigrations(client);
@@ -397,7 +555,7 @@ describe("W1 forward constraint repair", () => {
       const before = await client.query("select * from stripe_events order by stripe_event_id");
       const claimsBefore = await client.query("select * from bootstrap_claims order by id");
       await applyCanonicalMigrations(client);
-      expect((await readLedger(client)).rows.map((row) => Number(row.created_at))).toEqual([1783951023454, 1783951023728, 1783958463468]);
+      expect((await readLedger(client)).rows.map((row) => Number(row.created_at))).toEqual([1783951023454, 1783951023728, 1783958463468, 1784236425806]);
       expect((await client.query("select * from stripe_events order by stripe_event_id")).rows).toEqual(before.rows);
       expect((await client.query("select * from bootstrap_claims order by id")).rows).toEqual(claimsBefore.rows);
       const constraints = await readConstraintDefinitions(client, ["bootstrap_claims_lifecycle_check", "bootstrap_claims_revoke_reason_check"]);
@@ -687,7 +845,9 @@ describe("W1 C2 production idempotency repository", () => {
         expect(getterCalls).toBe(0);
       }
       for (const [targetRoute] of metadataCases) {
-        const compatible = sourceRoute === targetRoute || (sourceRoute !== "/api/billing/checkout" && sourceRoute !== "/api/bootstrap-claims/[claim_id]/revoke" && targetRoute !== "/api/billing/checkout" && targetRoute !== "/api/bootstrap-claims/[claim_id]/revoke");
+        const sourceIsIssue = sourceRoute === "/api/bootstrap-claims" || sourceRoute === "/api/bootstrap-claims/[claim_id]/reissue";
+        const targetIsIssue = targetRoute === "/api/bootstrap-claims" || targetRoute === "/api/bootstrap-claims/[claim_id]/reissue";
+        const compatible = sourceRoute === targetRoute || (sourceIsIssue && targetIsIssue);
         if (compatible) expect(validateResponseMetadata(targetRoute, metadata)).toEqual(metadata);
         else expect(() => validateResponseMetadata(targetRoute, metadata)).toThrow("invalid response metadata");
       }

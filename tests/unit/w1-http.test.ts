@@ -1,11 +1,129 @@
 import { describe, expect, it } from "vitest";
 import { createW1HttpHandlers, readBoundedWebhookText, readStrictJsonObject } from "@/lib/w1/http";
-import { WEBHOOK_BODY_LIMIT_BYTES } from "@/lib/w1/constants";
+import { BOOTSTRAP_CLAIM_REDEEM_ROUTE, INTERNAL_REDEEM_PRINCIPAL, WEBHOOK_BODY_LIMIT_BYTES } from "@/lib/w1/constants";
+import { digestRequest, generateClaim, hashClaim } from "@/lib/w1/crypto";
 import { decideIdempotency, decodeIdempotencyRecord, validateResponseMetadata, type IdempotencyRecord } from "@/lib/w1/idempotency";
+import { validateClaimRedemptionMetadata } from "@/lib/w1/repository";
 
 describe("W1 strict HTTP", () => {
   it("rejects duplicate keys", async () => { await expect(readStrictJsonObject(new Request("http://test/", { method: "POST", body: '{"a":1,"a":2}' }))).rejects.toThrow(); });
   it("parses exact objects", async () => { await expect(readStrictJsonObject(new Request("http://test/", { method: "POST", body: "{}" }))).resolves.toEqual({}); });
+
+  it("requires redemption idempotency and rejects non-exact bodies before persistence", async () => {
+    let transactions = 0;
+    const internalBearer = "A".repeat(43);
+    const repository = { transaction: async () => { transactions += 1; throw new Error("must not persist"); }, cleanupExpiredProcessingIdempotency: async () => {}, readEntitlement: async () => null, close: async () => {} };
+    const factory = { create: async (kind: string) => { if (kind !== "redeem") throw new Error("unexpected scope"); return { repository, claimPepper: "claim-pepper", rateLimitPepper: "rate-pepper", internalBearer, close: async () => {} }; } } as never;
+    const handlers = createW1HttpHandlers(factory);
+    const headers = { authorization: `Bearer ${internalBearer}`, "content-type": "application/json" };
+    const claim = "akc1.EAAAAAAAAIAAAAAAAAAAAQ.BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc";
+    const missingKey = await handlers.redeemClaim(new Request(`https://agentkip.test${BOOTSTRAP_CLAIM_REDEEM_ROUTE}`, { method: "POST", headers, body: JSON.stringify({ claim }) }));
+    expect(missingKey.status).toBe(400);
+    expect(await missingKey.json()).toMatchObject({ error: { code: "invalid_idempotency_key" } });
+    const extraBody = await handlers.redeemClaim(new Request(`https://agentkip.test${BOOTSTRAP_CLAIM_REDEEM_ROUTE}`, { method: "POST", headers: { ...headers, "idempotency-key": "redeem-http-key" }, body: JSON.stringify({ claim, subject: "forbidden" }) }));
+    expect(extraBody.status).toBe(400);
+    expect(await extraBody.json()).toMatchObject({ error: { code: "invalid_request" } });
+    const trailingSlash = await handlers.redeemClaim(new Request(`https://agentkip.test${BOOTSTRAP_CLAIM_REDEEM_ROUTE}/`, { method: "POST", headers: { ...headers, "idempotency-key": "redeem-http-key" }, body: JSON.stringify({ claim }) }));
+    expect(trailingSlash.status).toBe(400);
+    expect(await trailingSlash.json()).toMatchObject({ error: { code: "invalid_request" } });
+    const query = await handlers.redeemClaim(new Request(`https://agentkip.test${BOOTSTRAP_CLAIM_REDEEM_ROUTE}?source=forbidden`, { method: "POST", headers: { ...headers, "idempotency-key": "redeem-http-key" }, body: JSON.stringify({ claim }) }));
+    expect(query.status).toBe(400);
+    expect(await query.json()).toMatchObject({ error: { code: "invalid_request" } });
+    expect(transactions).toBe(0);
+  });
+
+  it("binds the canonical redemption digest to the fixed principal and treats expiry as retention-only", async () => {
+    const internalBearer = "A".repeat(43);
+    const claim = generateClaim({ randomUUID: () => "10000000-0000-4000-8000-000000000001", randomBytes: (size) => new Uint8Array(size).fill(7) }).claim;
+    const key = "redeem-http-replay";
+    const requestDigest = digestRequest("POST", BOOTSTRAP_CLAIM_REDEEM_ROUTE, { claim });
+    const metadata = { redemption_id: "b0000000-b000-4000-8000-000000000002", subject: "user_subject-1", entitlement: "c0000000-c000-4000-8000-000000000003", product: "tester" as const };
+    const seen: Array<[string, string]> = [];
+    const advisoryLocks: string[] = [];
+    const repository = {
+      transaction: async (work: (tx: object) => Promise<unknown>) => work({
+        acquireAdvisoryLock: async (lock: string) => { advisoryLocks.push(lock); },
+        readClaimRedemptionOperation: async (principal: string, idempotencyKey: string) => {
+          seen.push([principal, idempotencyKey]);
+          return { id: "d0000000-d000-4000-8000-000000000004", principal, idempotencyKey, requestDigest, responseStatus: 200, responseMetadata: metadata, expiresAt: new Date("2020-07-15T00:00:00.000Z"), createdAt: new Date("2020-07-14T00:00:00.000Z"), updatedAt: new Date("2020-07-14T00:00:00.000Z") };
+        },
+        readClaim: async () => { throw new Error("completed replay must not read a claim"); },
+        insertClaimRedemptionOperation: async () => { throw new Error("completed replay must not insert"); },
+      }),
+      cleanupExpiredProcessingIdempotency: async () => {}, readEntitlement: async () => null, close: async () => {},
+    };
+    const factory = { create: async () => ({ repository, claimPepper: "claim-pepper", rateLimitPepper: "rate-pepper", internalBearer, close: async () => {} }) } as never;
+    const response = await createW1HttpHandlers(factory).redeemClaim(new Request(`https://agentkip.test${BOOTSTRAP_CLAIM_REDEEM_ROUTE}`, { method: "POST", headers: { authorization: `Bearer ${internalBearer}`, "content-type": "application/json", "idempotency-key": key }, body: JSON.stringify({ claim }) }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(metadata);
+    expect(seen).toEqual([[INTERNAL_REDEEM_PRINCIPAL, key]]);
+    expect(advisoryLocks).toHaveLength(1);
+    expect(advisoryLocks[0]).toMatch(/^claim-redemption-operation:[0-9a-f]{64}$/);
+  });
+
+  it("keeps hidden claim states byte-identical in one padded timing class and authenticates first", async () => {
+    const internalBearer = "A".repeat(43);
+    const claimPepper = "hidden-state-claim-pepper";
+    const generated = generateClaim({ randomUUID: () => "10000000-0000-4000-8000-000000000001", randomBytes: (size) => new Uint8Array(size).fill(9) });
+    const now = new Date("2026-07-16T12:00:00.000Z");
+    const entitlement = { id: "c0000000-c000-4000-8000-000000000003", clerkSubject: "user_hidden_state", product: "agentkip_first_friend" as const, status: "active" as const, source: "stripe_subscription" as const, grantedAt: now, revokedAt: null, updatedAt: now, stripeCustomerId: "cus_hidden", stripeCheckoutSessionId: "cs_test_hidden", stripeSubscriptionId: "sub_hidden", lastEventCreatedAt: now, lastEventPrecedence: 50, lastStripeEventId: "evt_hidden" };
+    const active = { id: generated.id, entitlementId: entitlement.id, clerkSubject: entitlement.clerkSubject, product: "agentkip_first_friend" as const, claimHash: hashClaim(generated.claim, claimPepper), pepperVersion: 1, status: "active" as const, expiresAt: new Date(now.getTime() + 60_000), redemptionId: null, consumedAt: null, revokedAt: null, revokeReason: null };
+    const cases = [
+      ["unknown", null],
+      ["expired", { ...active, expiresAt: new Date(now.getTime() - 1) }],
+      ["consumed", { ...active, status: "consumed" as const, redemptionId: "b0000000-b000-4000-8000-000000000002", consumedAt: now }],
+      ["replayed", { ...active, status: "consumed" as const, redemptionId: "b0000000-b000-4000-8000-000000000002", consumedAt: now }],
+      ["revoked", { ...active, status: "revoked" as const, revokedAt: now, revokeReason: "delivery_uncertain" as const }],
+    ] as const;
+    const bodies: string[] = [];
+
+    for (const [name, row] of cases) {
+      const sleeps: number[] = [];
+      let transactions = 0;
+      const repository = {
+        transaction: async (work: (tx: object) => Promise<unknown>) => { transactions += 1; return work({
+          acquireAdvisoryLock: async () => {},
+          readClaimRedemptionOperation: async () => null,
+          readClaim: async () => row,
+          insertClaimRedemptionOperation: async () => { throw new Error("hidden result must not insert"); },
+          lockEntitlement: async () => entitlement,
+          lockClaim: async () => row,
+          consumeClaim: async () => { throw new Error("hidden result must not consume"); },
+        }); },
+        cleanupExpiredProcessingIdempotency: async () => {}, readEntitlement: async () => null, close: async () => {},
+      };
+      const factory = { create: async () => ({ repository, claimPepper, rateLimitPepper: "rate-pepper", internalBearer, clock: { now: () => now }, monotonic: { now: () => 0 }, sleeper: { sleep: async (milliseconds: number) => { sleeps.push(milliseconds); } }, close: async () => {} }) } as never;
+      const response = await createW1HttpHandlers(factory).redeemClaim(new Request(`https://agentkip.test${BOOTSTRAP_CLAIM_REDEEM_ROUTE}`, { method: "POST", headers: { authorization: `Bearer ${internalBearer}`, "content-type": "application/json", "idempotency-key": `hidden-${name}-key` }, body: JSON.stringify({ claim: generated.claim }) }));
+      expect(response.status, name).toBe(404);
+      bodies.push(await response.text());
+      expect(sleeps, name).toEqual([75]);
+      expect(transactions, name).toBe(1);
+    }
+    expect(new Set(bodies)).toEqual(new Set([JSON.stringify({ code: "claim_not_found", message: "Claim unavailable." })]));
+
+    let unauthorizedTransactions = 0;
+    const unauthorizedFactory = { create: async () => ({ repository: { transaction: async () => { unauthorizedTransactions += 1; throw new Error("authentication must precede persistence"); }, cleanupExpiredProcessingIdempotency: async () => {}, readEntitlement: async () => null, close: async () => {} }, claimPepper, rateLimitPepper: "rate-pepper", internalBearer, close: async () => {} }) } as never;
+    const unauthorized = await createW1HttpHandlers(unauthorizedFactory).redeemClaim(new Request("https://agentkip.test/wrong?forbidden=1", { method: "POST", headers: { authorization: "Bearer invalid", "content-type": "application/json" }, body: "{" }));
+    expect(unauthorized.status).toBe(401);
+    expect(await unauthorized.json()).toMatchObject({ error: { code: "unauthorized" } });
+    expect(unauthorizedTransactions).toBe(0);
+  });
+});
+
+describe("W1 claim redemption metadata", () => {
+  const metadata = () => ({ redemption_id: "b0000000-b000-4000-8000-000000000002", subject: "user_subject-1", entitlement: "c0000000-c000-4000-8000-000000000003", product: "tester" as const });
+
+  it("accepts only exact safe completed-operation metadata", () => {
+    expect(validateClaimRedemptionMetadata(metadata())).toEqual(metadata());
+    for (const key of Object.keys(metadata())) {
+      const missing = Object.fromEntries(Object.entries(metadata()).filter(([candidate]) => candidate !== key));
+      expect(() => validateClaimRedemptionMetadata(missing)).toThrow();
+      expect(() => validateClaimRedemptionMetadata({ ...metadata(), [key]: 1 })).toThrow();
+    }
+    for (const bad of [{ ...metadata(), extra: true }, { ...metadata(), claim: "forbidden" }, { ...metadata(), redemption_id: "B0000000-B000-4000-8000-000000000002" }, { ...metadata(), entitlement: "not-a-uuid" }, { ...metadata(), subject: "subject/invalid" }, { ...metadata(), product: "agentkip_first_friend" }, [], null, false]) expect(() => validateClaimRedemptionMetadata(bad)).toThrow();
+    const accessor = metadata(); Object.defineProperty(accessor, "subject", { enumerable: true, get: () => { throw new Error("getter invoked"); } });
+    expect(() => validateClaimRedemptionMetadata(accessor)).toThrow(/invalid claim redemption metadata/);
+  });
 });
 
 describe("W1 idempotency metadata", () => {
