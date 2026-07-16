@@ -10,11 +10,14 @@ export type HeroContent = {
 };
 
 export type GetPageContent = {
-  /** invite = ask Brandon; testflight = public TestFlight link live; appstore = shipped */
+  /** A stage can only be promoted when its matching verified destination is present. */
   betaStage: "invite" | "testflight" | "appstore";
   inviteHeadline: string;
   inviteBody: string;
   testflightUrl: string | null;
+  appStoreUrl: string | null;
+  nogginStage: "invite" | "repository";
+  nogginRepositoryUrl: string | null;
 };
 
 export type SiteStatus = {

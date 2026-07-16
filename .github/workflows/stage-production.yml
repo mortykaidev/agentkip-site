@@ -1,0 +1,179 @@
+name: Stage Production
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage-production
+  cancel-in-progress: true
+
+jobs:
+  stage:
+    name: Build exact main SHA without assigning domains
+    if: >-
+      ${{
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      TARGET_SHA: ${{ github.event.workflow_run.head_sha }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - name: Check out the CI-tested commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Verify this is still the exact main SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
+          checked_out_sha="$(git rev-parse HEAD)"
+          current_main_sha="$(git rev-parse refs/remotes/origin/main)"
+          if [[ "$checked_out_sha" != "$TARGET_SHA" ]]; then
+            echo "Checked-out SHA $checked_out_sha does not match CI SHA $TARGET_SHA." >&2
+            exit 1
+          fi
+          if [[ "$current_main_sha" != "$TARGET_SHA" ]]; then
+            echo "CI SHA $TARGET_SHA has been superseded by main SHA $current_main_sha; refusing to stage it." >&2
+            exit 1
+          fi
+
+      - name: Verify Vercel credentials are configured
+        shell: bash
+        run: |
+          set -euo pipefail
+          for variable in VERCEL_ORG_ID VERCEL_PROJECT_ID VERCEL_TOKEN; do
+            if [[ -z "${!variable:-}" ]]; then
+              echo "Missing required GitHub secret: $variable" >&2
+              exit 1
+            fi
+          done
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Pull production project settings
+        run: npx --yes vercel@56.2.1 pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build production artifact
+        run: npx --yes vercel@56.2.1 build --prod --token="$VERCEL_TOKEN"
+
+      - name: Stage production deployment
+        id: stage
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo_name="${GITHUB_REPOSITORY#*/}"
+          deployment_url="$(
+            npx --yes vercel@56.2.1 deploy \
+              --prebuilt \
+              --prod \
+              --skip-domain \
+              --yes \
+              --token="$VERCEL_TOKEN" \
+              --meta githubDeployment=1 \
+              --meta "githubCommitSha=$TARGET_SHA" \
+              --meta githubCommitRef=main \
+              --meta "githubOrg=$GITHUB_REPOSITORY_OWNER" \
+              --meta "githubRepo=$repo_name"
+          )"
+          deployment_url="${deployment_url//$'\r'/}"
+          deployment_url="${deployment_url%/}"
+          if [[ ! "$deployment_url" =~ ^https://[A-Za-z0-9.-]+\.vercel\.app$ ]]; then
+            echo "Vercel returned an unexpected deployment URL." >&2
+            exit 1
+          fi
+          echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for the staged deployment
+        env:
+          DEPLOYMENT_URL: ${{ steps.stage.outputs.url }}
+        run: >-
+          npx --yes vercel@56.2.1 inspect
+          "$DEPLOYMENT_URL"
+          --wait
+          --timeout=5m
+          --token="$VERCEL_TOKEN"
+
+      - name: Verify staged target and commit metadata
+        env:
+          DEPLOYMENT_URL: ${{ steps.stage.outputs.url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          deployment_host="${DEPLOYMENT_URL#https://}"
+          response="$(
+            curl --fail --silent --show-error \
+              --header "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v13/deployments/$deployment_host?teamId=$VERCEL_ORG_ID"
+          )"
+          jq --exit-status \
+            --arg sha "$TARGET_SHA" \
+            --arg project "$VERCEL_PROJECT_ID" \
+            '.readyState == "READY"
+              and .target == "production"
+              and .projectId == $project
+              and (.meta.githubDeployment | tostring) == "1"
+              and .meta.githubCommitSha == $sha
+              and .meta.githubCommitRef == "main"' \
+            <<<"$response" >/dev/null
+
+      - name: Smoke-test staged public routes
+        env:
+          DEPLOYMENT_URL: ${{ steps.stage.outputs.url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for route in / /get /privacy /terms /security; do
+            npx --yes vercel@56.2.1 curl "$route" \
+              --deployment "$DEPLOYMENT_URL" \
+              --token="$VERCEL_TOKEN" >/dev/null
+          done
+
+      - name: Record staged deployment
+        env:
+          DEPLOYMENT_URL: ${{ steps.stage.outputs.url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p staging-output
+          printf 'sha=%s\nurl=%s\n' "$TARGET_SHA" "$DEPLOYMENT_URL" > staging-output/deployment.env
+          {
+            echo "### Staged production deployment"
+            echo
+            echo "- SHA: \`$TARGET_SHA\`"
+            echo "- URL: $DEPLOYMENT_URL"
+            echo "- Traffic: not assigned; explicit promotion is still required"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload staged deployment receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: staged-production-${{ env.TARGET_SHA }}
+          path: staging-output/deployment.env
+          if-no-files-found: error
+          retention-days: 30

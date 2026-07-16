@@ -1,0 +1,246 @@
+import Image from "next/image";
+import Link from "next/link";
+import { QRCodeSVG } from "qrcode.react";
+
+export function ProductPhone({
+  src = "/product/walkthrough/01-home.webp",
+  alt = "AgentKip home screen on iPhone",
+  priority = false,
+  className = "",
+}: {
+  src?: string;
+  alt?: string;
+  priority?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={`launch-phone ${className}`}>
+      <div className="launch-phone-speaker" aria-hidden="true" />
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        priority={priority}
+        sizes="(max-width: 767px) 300px, (max-width: 1199px) 340px, 390px"
+        className="launch-phone-screen"
+      />
+    </div>
+  );
+}
+
+export function OrbitBackdrop() {
+  return (
+    <div className="launch-orbits" aria-hidden="true">
+      <span className="launch-orbit launch-orbit-outer" />
+      <span className="launch-orbit launch-orbit-inner" />
+      <span className="launch-satellite launch-satellite-mint" />
+      <span className="launch-satellite launch-satellite-lilac" />
+      <span className="launch-satellite-coral launch-satellite" />
+      <span className="launch-satellite launch-satellite-butter" />
+    </div>
+  );
+}
+
+const FLOW_STEPS = [
+  {
+    number: "1",
+    tone: "lilac",
+    title: "Ask",
+    body: "Start a run from your iPhone.",
+    preview: <ComposerPreview />,
+  },
+  {
+    number: "2",
+    tone: "mint",
+    title: "Follow",
+    body: "See progress and requested actions.",
+    preview: <ReviewPreview />,
+  },
+  {
+    number: "3",
+    tone: "coral",
+    title: "Done",
+    body: "Keep the result with the run.",
+    preview: <DonePreview />,
+  },
+] as const;
+
+export function RunFlow() {
+  return (
+    <section id="product" className="launch-band" aria-labelledby="run-flow-title">
+      <h2 id="run-flow-title" className="sr-only">
+        A run from start to finish
+      </h2>
+      <div className="launch-flow">
+        {FLOW_STEPS.map((step, index) => (
+          <div key={step.title} className="contents">
+            <article className="launch-flow-step">
+              <span className={`launch-step-number launch-tone-${step.tone}`}>{step.number}</span>
+              <div className="launch-step-copy">
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </div>
+              {step.preview}
+            </article>
+            {index < FLOW_STEPS.length - 1 ? <FlowArrow /> : null}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ComposerPreview() {
+  return (
+    <div className="launch-mini-panel launch-composer" aria-hidden="true">
+      <span>Message Kip</span>
+      <div>
+        <span>+</span>
+        <span className="launch-mini-chip">Kip</span>
+        <span className="launch-mini-chip">Everyday</span>
+        <span className="launch-mini-send">↑</span>
+      </div>
+    </div>
+  );
+}
+
+function ReviewPreview() {
+  return (
+    <div className="launch-mini-panel launch-review" aria-hidden="true">
+      <span>Action details are shown in the run.</span>
+      <span className="launch-review-state">Review</span>
+    </div>
+  );
+}
+
+function DonePreview() {
+  return (
+    <div className="launch-mini-panel launch-done" aria-hidden="true">
+      <span>Result saved with the run.</span>
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="m8 12 2.5 2.5L16 9" />
+      </svg>
+    </div>
+  );
+}
+
+function FlowArrow() {
+  return (
+    <svg className="launch-flow-arrow" viewBox="0 0 52 18" aria-hidden="true">
+      <path d="M2 9h42" />
+      <path d="m38 3 7 6-7 6" />
+    </svg>
+  );
+}
+
+const ARCHITECTURE_ITEMS = [
+  {
+    title: "Kip on iPhone",
+    body: "A native client in your pocket.",
+    icon: <PhoneIcon />,
+  },
+  {
+    title: "Your connection",
+    body: "Uses the path configured for your setup.",
+    icon: <ConnectionIcon />,
+  },
+  {
+    title: "Your Noggin",
+    body: "Runs on a server you control.",
+    icon: <ServerIcon />,
+  },
+] as const;
+
+export function ArchitectureStrip() {
+  return (
+    <section id="how-it-works" className="launch-band" aria-labelledby="architecture-title">
+      <h2 id="architecture-title" className="sr-only">
+        How AgentKip connects
+      </h2>
+      <div className="launch-architecture">
+        {ARCHITECTURE_ITEMS.map((item, index) => (
+          <div key={item.title} className="contents">
+            <article className="launch-architecture-item">
+              <span className="launch-architecture-icon">{item.icon}</span>
+              <div>
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+              </div>
+            </article>
+            {index < ARCHITECTURE_ITEMS.length - 1 ? (
+              <svg className="launch-architecture-arrow" viewBox="0 0 44 20" aria-hidden="true">
+                <path d="m9 3-7 7 7 7M2 10h40M35 3l7 7-7 7" />
+              </svg>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function GetKipStrip() {
+  return (
+    <section className="launch-get-strip" aria-labelledby="get-strip-title">
+      <div className="launch-qr" aria-hidden="true">
+        <QRCodeSVG
+          value="https://agentkip.ai/get"
+          size={76}
+          level="M"
+          marginSize={1}
+          bgColor="#f0eee6"
+          fgColor="#181918"
+        />
+      </div>
+      <div>
+        <h2 id="get-strip-title">Get Kip</h2>
+        <p>
+          Open <Link href="/get">agentkip.ai/get</Link> on your iPhone.
+        </p>
+        <Link href="/docs/deploy" className="launch-text-link">
+          Advanced self-hosting <ArrowIcon />
+        </Link>
+      </div>
+      <Link href="/get" className="launch-mobile-get">
+        Open Get Kip <ArrowIcon />
+      </Link>
+    </section>
+  );
+}
+
+export function ArrowIcon() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M3 10h13M11 5l5 5-5 5" />
+    </svg>
+  );
+}
+
+function PhoneIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="6.5" y="2.5" width="11" height="19" rx="2" />
+      <path d="M10 18.5h4" />
+    </svg>
+  );
+}
+
+function ConnectionIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="5" y="10" width="14" height="11" rx="2" />
+      <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3" />
+    </svg>
+  );
+}
+
+function ServerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="7" rx="2" />
+      <rect x="3" y="14" width="18" height="7" rx="2" />
+      <path d="M7 6.5h.01M7 17.5h.01M11 6.5h7M11 17.5h7" />
+    </svg>
+  );
+}

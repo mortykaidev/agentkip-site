@@ -1,5 +1,10 @@
 import { z } from "zod";
 import type { ContentKey, ContentMap } from "@/lib/content-types";
+import {
+  isValidAppStoreUrl,
+  isValidNogginRepositoryUrl,
+  isValidTestFlightUrl,
+} from "@/lib/release-links";
 
 /*
   Zod validation for everything that enters the store:
@@ -35,11 +40,42 @@ export const CONTENT_SCHEMAS: { [K in ContentKey]: z.ZodType<ContentMap[K]> } = 
       betaStage: z.enum(["invite", "testflight", "appstore"]),
       inviteHeadline: nonEmpty,
       inviteBody: nonEmpty,
-      testflightUrl: z.url("Must be a full URL (https://…)").nullable(),
+      testflightUrl: z
+        .string()
+        .refine(isValidTestFlightUrl, "Use a direct https://testflight.apple.com/join/… link.")
+        .nullable(),
+      appStoreUrl: z
+        .string()
+        .refine(isValidAppStoreUrl, "Use the full apps.apple.com app listing URL, including its id.")
+        .nullable(),
+      nogginStage: z.enum(["invite", "repository"]),
+      nogginRepositoryUrl: z
+        .string()
+        .refine(isValidNogginRepositoryUrl, "Use the public https://github.com/owner/repository URL.")
+        .nullable(),
     })
-    .refine((value) => value.betaStage !== "testflight" || value.testflightUrl !== null, {
-      message: "A TestFlight URL is required when the stage is set to TestFlight.",
-      path: ["testflightUrl"],
+    .superRefine((value, context) => {
+      if (value.betaStage === "testflight" && value.testflightUrl === null) {
+        context.addIssue({
+          code: "custom",
+          message: "A verified TestFlight URL is required for the TestFlight stage.",
+          path: ["testflightUrl"],
+        });
+      }
+      if (value.betaStage === "appstore" && value.appStoreUrl === null) {
+        context.addIssue({
+          code: "custom",
+          message: "A verified App Store listing is required for the App Store stage.",
+          path: ["appStoreUrl"],
+        });
+      }
+      if (value.nogginStage === "repository" && value.nogginRepositoryUrl === null) {
+        context.addIssue({
+          code: "custom",
+          message: "A verified public Noggin repository is required for the repository stage.",
+          path: ["nogginRepositoryUrl"],
+        });
+      }
     }),
   siteStatus: z.object({
     label: nonEmpty,

@@ -16,6 +16,7 @@ const ROUTES = [
   "/gallery",
   "/kip",
   "/contact",
+  "/support",
   "/privacy",
   "/terms",
 ];

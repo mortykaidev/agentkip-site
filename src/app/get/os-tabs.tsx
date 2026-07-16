@@ -8,7 +8,8 @@ import { CodeBlock } from "@/app/get/code-block";
  * Used by: src/app/get/page.tsx.
  * Steps come from verified noggin facts (README.md, docker-compose.yml,
  * docker-compose.windows.yml, .env.example, AgentKip iOS pairing docs) —
- * no invented public repo URL; the clone link ships with the beta invite.
+ * It is rendered only after the admin content model contains a verified public
+ * repository URL, so the commands never expose a fake clone destination.
  */
 
 type OsKey = "macos" | "linux" | "windows" | "docker";
@@ -20,7 +21,7 @@ const TABS: { key: OsKey; label: string }[] = [
   { key: "docker", label: "Docker" },
 ];
 
-export function OsTabs() {
+export function OsTabs({ repositoryUrl }: { repositoryUrl: string }) {
   const [active, setActive] = useState<OsKey>("macos");
 
   return (
@@ -44,10 +45,10 @@ export function OsTabs() {
       </div>
 
       <div className="mt-6">
-        {active === "macos" ? <MacLinuxSteps os="macos" /> : null}
-        {active === "linux" ? <MacLinuxSteps os="linux" /> : null}
-        {active === "windows" ? <WindowsSteps /> : null}
-        {active === "docker" ? <DockerSteps /> : null}
+        {active === "macos" ? <MacLinuxSteps os="macos" repositoryUrl={repositoryUrl} /> : null}
+        {active === "linux" ? <MacLinuxSteps os="linux" repositoryUrl={repositoryUrl} /> : null}
+        {active === "windows" ? <WindowsSteps repositoryUrl={repositoryUrl} /> : null}
+        {active === "docker" ? <DockerSteps repositoryUrl={repositoryUrl} /> : null}
       </div>
     </div>
   );
@@ -88,14 +89,20 @@ function Step({
   );
 }
 
-function MacLinuxSteps({ os }: { os: "macos" | "linux" }) {
+function MacLinuxSteps({
+  os,
+  repositoryUrl,
+}: {
+  os: "macos" | "linux";
+  repositoryUrl: string;
+}) {
   return (
     <StepList>
       <Step
         n={1}
         title="Clone Noggin"
-        body="The repo link comes with your beta invite — clone it wherever you keep projects."
-        code={`git clone <the-repo-url-from-your-invite> noggin\ncd noggin`}
+        body="Clone the verified public repository wherever you keep projects."
+        code={`git clone ${repositoryUrl} noggin\ncd noggin`}
       />
       <Step
         n={2}
@@ -139,7 +146,7 @@ function MacLinuxSteps({ os }: { os: "macos" | "linux" }) {
   );
 }
 
-function WindowsSteps() {
+function WindowsSteps({ repositoryUrl }: { repositoryUrl: string }) {
   return (
     <StepList>
       <Step
@@ -150,8 +157,8 @@ function WindowsSteps() {
       <Step
         n={2}
         title="Clone Noggin"
-        body="The repo link comes with your beta invite."
-        code={`git clone <the-repo-url-from-your-invite> noggin\ncd noggin`}
+        body="Clone the verified public repository."
+        code={`git clone ${repositoryUrl} noggin\ncd noggin`}
       />
       <Step
         n={3}
@@ -181,14 +188,14 @@ function WindowsSteps() {
   );
 }
 
-function DockerSteps() {
+function DockerSteps({ repositoryUrl }: { repositoryUrl: string }) {
   return (
     <StepList>
       <Step
         n={1}
         title="Clone Noggin"
-        body="The repo link comes with your beta invite."
-        code={`git clone <the-repo-url-from-your-invite> noggin\ncd noggin`}
+        body="Clone the verified public repository."
+        code={`git clone ${repositoryUrl} noggin\ncd noggin`}
       />
       <Step
         n={2}

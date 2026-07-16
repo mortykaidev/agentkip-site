@@ -1,0 +1,151 @@
+name: Promote Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Full 40-character main commit SHA that was staged
+        required: true
+        type: string
+      deployment_url:
+        description: Staged production URL produced by Stage Production
+        required: true
+        type: string
+      confirmation:
+        description: Type PROMOTE agentkip.ai exactly
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: promote-production
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Promote explicitly approved staged deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: Production
+      url: https://agentkip.ai
+    env:
+      DEPLOYMENT_URL: ${{ inputs.deployment_url }}
+      TARGET_SHA: ${{ inputs.sha }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - name: Check out current main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: main
+
+      - name: Verify explicit approval and exact current main SHA
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$CONFIRMATION" != "PROMOTE agentkip.ai" ]]; then
+            echo "Confirmation must be exactly: PROMOTE agentkip.ai" >&2
+            exit 1
+          fi
+          if [[ ! "$TARGET_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "SHA must be a full lowercase 40-character Git commit SHA." >&2
+            exit 1
+          fi
+          if [[ ! "$DEPLOYMENT_URL" =~ ^https://[A-Za-z0-9.-]+\.vercel\.app$ ]]; then
+            echo "Deployment URL must be a staged vercel.app URL." >&2
+            exit 1
+          fi
+          git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
+          current_main_sha="$(git rev-parse refs/remotes/origin/main)"
+          if [[ "$current_main_sha" != "$TARGET_SHA" ]]; then
+            echo "Approved SHA $TARGET_SHA is not current main SHA $current_main_sha." >&2
+            exit 1
+          fi
+
+      - name: Verify Vercel credentials are configured
+        shell: bash
+        run: |
+          set -euo pipefail
+          for variable in VERCEL_ORG_ID VERCEL_PROJECT_ID VERCEL_TOKEN; do
+            if [[ -z "${!variable:-}" ]]; then
+              echo "Missing required GitHub secret: $variable" >&2
+              exit 1
+            fi
+          done
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify staged target and commit metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          deployment_host="${DEPLOYMENT_URL#https://}"
+          response="$(
+            curl --fail --silent --show-error \
+              --header "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v13/deployments/$deployment_host?teamId=$VERCEL_ORG_ID"
+          )"
+          jq --exit-status \
+            --arg sha "$TARGET_SHA" \
+            --arg project "$VERCEL_PROJECT_ID" \
+            '.readyState == "READY"
+              and .target == "production"
+              and .projectId == $project
+              and (.meta.githubDeployment | tostring) == "1"
+              and .meta.githubCommitSha == $sha
+              and .meta.githubCommitRef == "main"' \
+            <<<"$response" >/dev/null
+
+      - name: Recheck the staged deployment
+        run: >-
+          npx --yes vercel@56.2.1 inspect
+          "$DEPLOYMENT_URL"
+          --wait
+          --timeout=5m
+          --token="$VERCEL_TOKEN"
+
+      - name: Smoke-test staged public routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          for route in / /get /privacy /terms /security; do
+            npx --yes vercel@56.2.1 curl "$route" \
+              --deployment "$DEPLOYMENT_URL" \
+              --token="$VERCEL_TOKEN" >/dev/null
+          done
+
+      - name: Promote the staged deployment
+        run: >-
+          npx --yes vercel@56.2.1 promote
+          "$DEPLOYMENT_URL"
+          --yes
+          --timeout=5m
+          --token="$VERCEL_TOKEN"
+
+      - name: Smoke-test production domains
+        shell: bash
+        run: |
+          set -euo pipefail
+          for route in / /get /privacy /terms /security; do
+            curl --fail --location --silent --show-error \
+              --retry 5 --retry-delay 5 --retry-all-errors \
+              "https://agentkip.ai$route" >/dev/null
+          done
+          {
+            echo "### Production promotion complete"
+            echo
+            echo "- SHA: \`$TARGET_SHA\`"
+            echo "- Staged deployment: $DEPLOYMENT_URL"
+            echo "- Live URL: https://agentkip.ai"
+          } >> "$GITHUB_STEP_SUMMARY"

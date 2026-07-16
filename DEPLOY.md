@@ -1,7 +1,12 @@
 # Deploying agentkip.ai
 
-The site runs anywhere Next.js 16 runs; this is the Vercel path (recommended).
-Total time: ~20 minutes. Everything is free-tier for a beta launch.
+The site runs anywhere Next.js 16 runs. Vercel provides automatic branch previews, while
+production uses a controlled two-step workflow: stage the exact tested `main` SHA without
+assigning domains, then promote that staged deployment only after Brandon explicitly approves it.
+
+Merging to `main` does **not** put a deployment on the production domains. `vercel.json` disables
+Vercel's automatic `main` deployment while leaving preview deployments enabled for every other
+branch.
 
 ## 0. What you need
 
@@ -20,19 +25,68 @@ gh repo create agentkip-site --private --source=. --push
 ## 2. Import to Vercel
 
 1. vercel.com → **Add New → Project** → import `agentkip-site`.
-2. Framework preset: **Next.js** (auto-detected). Deploy — the first build
-   will succeed with zero env vars (auth/admin/data quietly disable
-   themselves until configured).
+2. Framework preset: **Next.js** (auto-detected). Keep the Git integration connected; it creates
+   preview deployments for pull requests and branch pushes.
+3. Confirm the Vercel production branch is `main`. Repository configuration prevents that branch
+   from deploying automatically, so GitHub Actions remains the only production path.
+
+## 2a. Configure controlled production workflows
+
+Create a Vercel access token and find the linked project's team and project IDs. A local
+`npx --yes vercel@56.2.1 link` writes those IDs to the gitignored `.vercel/project.json`; never
+commit the token or that local file.
+
+In GitHub → `mortykaidev/agentkip-site` → **Settings → Secrets and variables → Actions**, add these
+repository secrets:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+In **Settings → Environments → Production**, add Brandon as a required reviewer. The promotion
+workflow also requires a full SHA, the staged Vercel URL, and the exact confirmation text
+`PROMOTE agentkip.ai`.
+
+The workflows are deliberately separated:
+
+1. `.github/workflows/ci.yml` runs `npm run check` for pull requests and pushes to `main`.
+2. After a successful `main` CI run, `.github/workflows/stage-production.yml` checks that the CI
+   SHA is still the current `main`, builds it with Vercel CLI `56.2.1`, and deploys with
+   `--prod --skip-domain`. The deployment is production-configured but receives no live traffic.
+3. The stage run records an artifact named `staged-production-<sha>` containing the SHA and URL.
+4. `.github/workflows/promote-production.yml` is manual-only. It revalidates the SHA, current
+   `main`, Vercel target, READY state, and Git metadata before promoting the staged deployment.
+
+To promote from the command line after explicit approval:
+
+```bash
+gh workflow run promote-production.yml \
+  --repo mortykaidev/agentkip-site \
+  --ref main \
+  -f sha=<full-40-character-main-sha> \
+  -f deployment_url=https://<staged-deployment>.vercel.app \
+  -f 'confirmation=PROMOTE agentkip.ai'
+```
+
+Watch the dispatched run and require it to finish successfully before reporting the site live:
+
+```bash
+gh run list --repo mortykaidev/agentkip-site --workflow promote-production.yml --limit 1
+gh run watch <run-id> --repo mortykaidev/agentkip-site --exit-status
+```
 
 ## 3. Database (Neon Postgres)
 
 1. In the Vercel project → **Storage** tab → **Create → Neon Postgres**.
 2. That auto-adds `DATABASE_URL` to the project env.
 3. Locally: copy `.env.example` to `.env`, paste the same `DATABASE_URL`,
-   then push the schema:
+   then apply reviewed forward migrations:
    ```bash
-   npm run db:push
+   npm run db:migrate
    ```
+
+Database migrations are not automated by the deployment workflows. Take the approved backup and
+pass the migration gate before promoting code that depends on a new schema.
 
 ## 4. Auth (Clerk)
 
@@ -44,7 +98,8 @@ gh repo create agentkip-site --private --source=. --push
 3. Sign in to the deployed site once, then find your user ID in the Clerk
    dashboard (Users → your user → User ID, starts with `user_`), and set:
    - `ADMIN_USER_IDS=user_xxxxxxxx`
-4. Redeploy (Vercel → Deployments → ⋯ → Redeploy) so env changes apply.
+4. Stage a fresh production deployment and explicitly promote it so the new environment values
+   are included in the build.
 
 ## 5. Gallery uploads (optional, later)
 
@@ -101,3 +156,9 @@ W1 does not create or repair any Price, Product, promotion, webhook endpoint,
 or provider configuration. The gateway remains off. Secrets, hosted checkout
 locations, user subjects, provider identifiers, and claims do not enter docs or
 PR evidence.
+
+## Rollback
+
+Do not rebuild an arbitrary branch. In Vercel, select the previously known-good production
+deployment and use **Rollback**, or run `npx --yes vercel@56.2.1 rollback` with explicit Brandon
+approval. Database recovery remains a reviewed forward repair; never rewrite migration history.

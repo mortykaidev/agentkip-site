@@ -2,13 +2,10 @@ import { ClerkProvider, Show, UserButton } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import localFont from "next/font/local";
-import Script from "next/script";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
-import { Pill } from "@/components/ui";
 import { isClerkConfigured } from "@/lib/auth";
-import { getContent } from "@/lib/content";
 
 const gugi = localFont({
   src: "../fonts/Gugi-Regular.ttf",
@@ -23,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s · AgentKip",
   },
   description:
-    "AgentKip (Kip) is a native iOS client for a personal AI agent server you host yourself. Durable streaming runs, model switching, voice, widgets, Live Activities, and on-device Apple Intelligence — with your data on your hardware.",
+    "Kip connects your iPhone to a Noggin you control, so your AI can help without becoming someone else's data.",
   openGraph: {
     siteName: "AgentKip",
     type: "website",
@@ -34,7 +31,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#262624",
+  themeColor: "#181918",
   width: "device-width",
   initialScale: 1,
 };
@@ -43,8 +40,8 @@ export const viewport: Viewport = {
 const CLERK_APPEARANCE = {
   variables: {
     colorBackground: "#30302e",
-    colorPrimary: "#7fd8b1",
-    colorTextOnPrimaryBackground: "#14211b",
+    colorPrimary: "#f88763",
+    colorTextOnPrimaryBackground: "#181918",
     colorText: "#f0eee6",
     colorTextSecondary: "#c5c2b6",
     colorInputBackground: "#3a3a37",
@@ -55,12 +52,6 @@ const CLERK_APPEARANCE = {
   },
 };
 
-/** Beta status pill for the footer — reads the admin-editable siteStatus section. */
-async function StatusPill() {
-  const status = await getContent("siteStatus");
-  return <Pill tone={status.tone}>{status.label}</Pill>;
-}
-
 /** Nav account slot — only rendered when Clerk is configured. */
 function AccountSlot() {
   return (
@@ -68,7 +59,7 @@ function AccountSlot() {
       <Show when="signed-in">
         <Link
           href="/account"
-          className="hidden rounded-full px-3 py-2 text-sm text-ink-secondary transition-colors hover:text-ink sm:block"
+          className="rounded-full px-3 py-2 text-sm text-ink-secondary transition-colors hover:text-ink"
         >
           Account
         </Link>
@@ -90,17 +81,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const clerkEnabled = isClerkConfigured();
 
   const page = (
-    <html lang="en" className={gugi.variable} suppressHydrationWarning>
-      <head>
-        {/* Apply persisted theme before first paint to avoid flash */}
-        <Script id="kip-theme-init" strategy="beforeInteractive">
-          {`try{if(localStorage.getItem("kip-theme")==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}`}
-        </Script>
-      </head>
+    <html lang="en" className={gugi.variable}>
       <body className="flex min-h-svh flex-col">
+        <a className="skip-link" href="#main-content">
+          Skip to content
+        </a>
         <Nav accountSlot={clerkEnabled ? <AccountSlot /> : undefined} />
-        <main className="flex-1">{children}</main>
-        <Footer statusSlot={<StatusPill />} />
+        <main id="main-content" className="flex-1">
+          {children}
+        </main>
+        <Footer />
       </body>
     </html>
   );
