@@ -323,7 +323,7 @@ describe("W1 bootstrap claim repository decoders", () => {
       const { createW1Repository } = await import("@/lib/w1/repository");
       const { createW1Services } = await import("@/lib/w1/services");
       const subject = "claimdb-subject";
-      const now = new Date("2026-07-14T12:00:00.000Z");
+      const { rows: [{ now }] } = await client.query<{ now: Date }>("select now() as now");
       await client.query("insert into billing_customers (clerk_subject, stripe_customer_id) values ($1, 'cus_claimdb')", [subject]);
       await client.query("insert into stripe_events (stripe_event_id, event_type, event_created_at, status, attempt_count, processed_at, failure_code) values ('evt_claimdb', 'checkout.session.completed', $1, 'processed', 1, $1, null)", [now]);
       await client.query("insert into entitlements (clerk_subject, product, status, source, stripe_customer_id, stripe_checkout_session_id, stripe_subscription_id, last_stripe_event_id, last_event_created_at, last_event_precedence, granted_at, revoked_at, updated_at) values ($1, 'agentkip_first_friend', 'active', 'stripe_subscription', 'cus_claimdb', 'cs_test_claimdb', 'sub_claimdb', 'evt_claimdb', $2, 10, $2, null, now())", [subject, now]);
