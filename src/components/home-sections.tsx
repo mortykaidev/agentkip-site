@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { ArrowIcon, ProductPhone } from "@/components/launch";
 import { PhoneDemo } from "@/components/demo/phone-demo";
 
@@ -77,28 +76,11 @@ const COMPARE_ROWS = [
   },
 ] as const;
 
-function useNarrowComparison() {
-  const [isNarrow, setIsNarrow] = useState(false);
-
-  useEffect(() => {
-    const query = window.matchMedia("(max-width: 600px)");
-    const update = () => setIsNarrow(query.matches);
-
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, []);
-
-  return isNarrow;
-}
-
 export function CompareStrip() {
-  const isNarrow = useNarrowComparison();
-
   return (
     <section className="home-compare-wrap" aria-labelledby="home-compare-title">
       <h2 id="home-compare-title">How Kip compares.</h2>
-      <table className="home-compare" aria-hidden={isNarrow}>
+      <table className="home-compare">
         <caption className="sr-only">How Kip compares to most AI apps</caption>
         <thead>
           <tr>
@@ -117,7 +99,7 @@ export function CompareStrip() {
           ))}
         </tbody>
       </table>
-      <div className="home-compare-mobile" aria-hidden={!isNarrow}>
+      <div className="home-compare-mobile">
         {COMPARE_ROWS.map((row) => (
           <article key={row.label} className="home-compare-card">
             <h3>{row.label}</h3>

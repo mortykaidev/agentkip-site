@@ -46,6 +46,9 @@
   --accent: #3d8ac2;
   --on-accent: #101c26;
   --user-bubble: #ddeee5;
+  --launch-tone-lilac: #665585;
+  --launch-tone-mint: #356b54;
+  --launch-tone-butter: #765116;
 }
 
 @theme inline {
@@ -495,6 +498,34 @@ body {
   border-radius: 35px;
 }
 
+.launch-phone-legacy-mask {
+  position: absolute;
+  z-index: 2;
+  right: 5%;
+  left: 5%;
+  background: #252623;
+  pointer-events: none;
+}
+
+.launch-phone-legacy-mask-home {
+  top: 42.8%;
+  height: 2.2%;
+}
+
+.launch-phone-legacy-mask-compose {
+  top: 44.2%;
+  right: 6%;
+  left: 6%;
+  height: 4.8%;
+}
+
+.launch-phone-legacy-mask-complete {
+  top: 45.8%;
+  right: 6%;
+  left: 6%;
+  height: 5.3%;
+}
+
 .launch-phone-speaker {
   position: absolute;
   z-index: 3;
@@ -546,9 +577,9 @@ body {
   font-weight: 750;
 }
 
-.launch-tone-lilac { color: var(--lilac); }
-.launch-tone-mint { color: var(--mint); }
-.launch-tone-butter { color: var(--butter); }
+.launch-tone-lilac { color: var(--launch-tone-lilac, var(--lilac)); }
+.launch-tone-mint { color: var(--launch-tone-mint, var(--mint)); }
+.launch-tone-butter { color: var(--launch-tone-butter, var(--butter)); }
 
 .launch-step-copy h3,
 .launch-architecture-item h3 {
@@ -666,7 +697,7 @@ body {
   place-items: center;
   border: 1px solid var(--border);
   border-radius: 50%;
-  color: var(--mint);
+  color: var(--launch-tone-mint, var(--mint));
 }
 
 .launch-architecture-icon svg {

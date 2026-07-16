@@ -25,7 +25,7 @@ const STEPS = [
     number: "3",
     tone: "butter",
     title: "Ask for help anywhere.",
-    body: "Kip works wherever you are. Your conversations stay on the box at home.",
+    body: "Kip works wherever you are. Noggin keeps your history and controls at home; your chosen AI provider processes requests when you use one.",
   },
 ] as const;
 
@@ -37,9 +37,9 @@ export default function HowItWorksPage() {
           How AgentKip works
         </h1>
         <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-ink-secondary">
-          Kip is the app you talk to, right on your iPhone. Noggin is the small computer that does
-          the thinking — a little server that stays right where you keep it, not off in someone
-          else&apos;s data center.
+          Kip is the app you talk to, right on your iPhone. Noggin is the small computer at home
+          that keeps your history and controls close to you. It can use the AI provider you choose
+          when it needs a response.
         </p>
       </section>
 

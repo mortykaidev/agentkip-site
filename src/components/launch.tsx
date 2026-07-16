@@ -2,6 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 
+const LEGACY_CALLOUT_MASKS: Record<string, string> = {
+  "/product/walkthrough/01-home.webp": "launch-phone-legacy-mask-home",
+  "/product/walkthrough/02-compose.webp": "launch-phone-legacy-mask-compose",
+  "/product/walkthrough/05-complete.webp": "launch-phone-legacy-mask-complete",
+};
+
 export function ProductPhone({
   src = "/product/walkthrough/01-home.webp",
   alt = "AgentKip home screen on iPhone",
@@ -13,6 +19,8 @@ export function ProductPhone({
   priority?: boolean;
   className?: string;
 }) {
+  const legacyCalloutMask = LEGACY_CALLOUT_MASKS[src];
+
   return (
     <div className={`launch-phone ${className}`}>
       <div className="launch-phone-speaker" aria-hidden="true" />
@@ -24,6 +32,9 @@ export function ProductPhone({
         sizes="(max-width: 767px) 300px, (max-width: 1199px) 340px, 390px"
         className="launch-phone-screen"
       />
+      {legacyCalloutMask ? (
+        <span className={`launch-phone-legacy-mask ${legacyCalloutMask}`} aria-hidden="true" />
+      ) : null}
     </div>
   );
 }
