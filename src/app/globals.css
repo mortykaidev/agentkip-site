@@ -700,6 +700,10 @@ body {
   color: var(--launch-tone-mint, var(--mint));
 }
 
+[data-theme="light"] .launch-architecture-icon {
+  border-color: var(--launch-tone-mint);
+}
+
 .launch-architecture-icon svg {
   width: 23px;
   height: 23px;
