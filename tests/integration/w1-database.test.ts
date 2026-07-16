@@ -357,6 +357,29 @@ describe("W1 bootstrap claim repository decoders", () => {
     } finally { await client.end(); }
   }, 30_000);
 
+  it("uses PostgreSQL wall time as the final claim-expiry authority", async () => {
+    const client = await createClient();
+    try {
+      await applyMigrations(client);
+      const { createW1Repository } = await import("@/lib/w1/repository");
+      const dependency = await seedClaimDependencies(client, 904);
+      const claimId = "10000000-0000-4000-8000-000000000904";
+      await client.query(
+        "insert into bootstrap_claims (id, entitlement_id, clerk_subject, product, claim_hash, pepper_version, status, expires_at) values ($1, $2, $3, 'agentkip_first_friend', $4, 1, 'active', clock_timestamp() + interval '500 milliseconds')",
+        [claimId, dependency.entitlementId, dependency.subject, "9".repeat(64)],
+      );
+      const repository = createW1Repository(c2Port(client));
+      const redemption = await repository.transaction(async (tx) => {
+        expect(await tx.lockClaim(claimId)).toMatchObject({ id: claimId, status: "active" });
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        return tx.consumeClaim(claimId);
+      });
+
+      expect(redemption).toBeNull();
+      expect((await client.query("select status, redemption_id, consumed_at from bootstrap_claims where id=$1", [claimId])).rows).toEqual([{ status: "active", redemption_id: null, consumed_at: null }]);
+    } finally { await client.end(); }
+  }, 30_000);
+
   it("serializes concurrent redemption and preserves one replayable non-secret result", async () => {
     const first = await createClient();
     const second = await secondClientFor(first);

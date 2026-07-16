@@ -22,6 +22,7 @@ class ClaimFixture implements W1Repository {
   failConsumption = false;
   failRedemptionInsert = false;
   advanceClockOnClaimLock: Date | null = null;
+  advanceClockOnConsumeClaim: Date | null = null;
   private currentTime = new Date("2026-07-14T12:00:00.000Z");
   readonly clock: W1Clock = { now: () => new Date(this.currentTime) };
   readonly random: W1Random = { randomUUID: () => fixtureId(this.state.nextId++), randomBytes: (size) => Uint8Array.from({ length: size }, (_, index) => (this.state.nextId + index) % 256) };
@@ -74,7 +75,7 @@ class ClaimFixture implements W1Repository {
       lockCurrentClaim: async (subject, entitlementId) => { const row = [...draft.claims.values()].find((candidate) => candidate.clerkSubject === subject && candidate.entitlementId === entitlementId && candidate.status === "active"); return row ? cloneClaim(row) : null; },
       insertClaim: async (row) => { draft.claims.set(row.id, cloneClaim(row)); },
       updateClaim: async (row) => { draft.claims.set(row.id, cloneClaim(row)); },
-      consumeClaim: async (id, notExpiredAfter) => { const row = draft.claims.get(id); if (this.failConsumption || !row || row.status !== "active" || row.expiresAt.getTime() <= notExpiredAfter.getTime()) return null; const redemptionId = fixtureId(draft.nextId++); draft.claims.set(id, { ...row, status: "consumed", consumedAt: this.clock.now(), redemptionId }); return redemptionId; },
+      consumeClaim: async (id) => { if (this.failConsumption) throw new Error("injected consumption failure"); if (this.advanceClockOnConsumeClaim) { this.currentTime = new Date(this.advanceClockOnConsumeClaim); this.advanceClockOnConsumeClaim = null; } const row = draft.claims.get(id); const consumedAt = this.clock.now(); if (!row || row.status !== "active" || row.expiresAt.getTime() <= consumedAt.getTime()) return null; const redemptionId = fixtureId(draft.nextId++); draft.claims.set(id, { ...row, status: "consumed", consumedAt, redemptionId }); return redemptionId; },
       acquireAdvisoryLock: async () => undefined,
       countRecentAttempts: async (hash) => draft.attempts.filter((attempt) => attempt.hash === hash).length,
       insertAttempt: async (hash, action) => { draft.attempts.push({ hash, action }); },
@@ -196,6 +197,21 @@ describe("W1 C4 bounded claim atomicity and recovery", () => {
     fixture.advanceClockOnClaimLock = new Date(claim.expiresAt);
 
     await expect(services.redeemClaim(issued.claim, "redeem-lock-expiry", digest("l"))).rejects.toMatchObject({ code: "claim_not_found" });
+    expect(fixture.snapshot()).toBe(before);
+    expect(fixture.state.claims.get(issued.claim_id)?.status).toBe("active");
+    expect(fixture.state.redemptionOperations.size).toBe(0);
+  });
+
+  it("treats expiry at atomic consumption as an unavailable claim without mutation", async () => {
+    const fixture = new ClaimFixture();
+    const services = fixture.services();
+    const issued = await services.issueClaim("subject-a", key, digest("a"), sourceIpHash);
+    const claim = fixture.state.claims.get(issued.claim_id);
+    if (!claim) throw new Error("fixture claim missing");
+    const before = fixture.snapshot();
+    fixture.advanceClockOnConsumeClaim = new Date(claim.expiresAt);
+
+    await expect(services.redeemClaim(issued.claim, "redeem-consume-expiry", digest("m"))).rejects.toMatchObject({ code: "claim_not_found" });
     expect(fixture.snapshot()).toBe(before);
     expect(fixture.state.claims.get(issued.claim_id)?.status).toBe("active");
     expect(fixture.state.redemptionOperations.size).toBe(0);

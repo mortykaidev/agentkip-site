@@ -320,8 +320,8 @@ export function createW1Services(deps: W1ServiceDependencies): W1Services {
             || row.expiresAt.getTime() <= now.getTime()) return null;
           if (!entitlement || entitlement.status !== "active" || entitlement.id !== row.entitlementId || entitlement.clerkSubject !== row.clerkSubject || entitlement.product !== row.product) return null;
 
-          const redemption = await tx.consumeClaim(row.id, now);
-          if (!redemption) throw new Error("claim consumption did not update exactly one active row");
+          const redemption = await tx.consumeClaim(row.id);
+          if (!redemption) return null;
           const response = { redemption_id: redemption, subject: row.clerkSubject, entitlement: row.entitlementId, product: "tester" as const };
           await capability.insertClaimRedemptionOperation({ principal: INTERNAL_REDEEM_PRINCIPAL, idempotencyKey: key, requestDigest: digest, responseStatus: 200, responseMetadata: response, expiresAt: new Date(now.getTime() + IDEMPOTENCY_TTL_MS) });
           return response;
