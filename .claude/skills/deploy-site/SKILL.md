@@ -1,14 +1,14 @@
 ---
 name: deploy-site
-description: Merge an approved branch/PR to main to deploy agentkip.ai to production via Vercel. Use when Brandon invokes /deploy-site with explicit sign-off to ship a reviewed branch live.
+description: Merge an approved AgentKip website PR, wait for its exact-SHA staged Vercel build, and manually promote it only with Brandon's explicit sign-off.
 ---
 
 # /deploy-site
 
-Merging `main` to `main`'s remote IS the production deploy — Vercel is already wired to
-auto-deploy on push to `main` (see `DEPLOY.md`). This skill does not provision new
-infrastructure; it just performs that merge safely, gated on Brandon's explicit sign-off,
-and confirms the deploy landed.
+Merging a PR starts CI and an exact-SHA staged production build, but it does **not** send live
+traffic to that build. `vercel.json` keeps branch previews automatic and disables automatic
+production deployment from `main`. This skill promotes the staged build only after every gate
+passes and Brandon explicitly requests production deployment.
 
 ## Hard gate — do not skip
 
@@ -26,25 +26,47 @@ proceeding.
 2. **Verify the PR is actually ready:**
    - `gh pr view <n> --repo mortykaidev/agentkip-site --json state,mergeable,mergeStateStatus,isDraft,statusCheckRollup`
    - Must not be a draft. Must be `MERGEABLE`. If there's a CI/status check rollup, it must be
-     green (or absent — this repo currently has no required CI beyond Vercel's own preview build).
+     green. The `CI` workflow and Vercel preview must both succeed.
    - Confirm a Vercel preview deployment exists and succeeded for the PR's head commit — check
      the PR's checks/comments for the Vercel bot's preview URL and status. If the preview failed
      or is missing, stop and report; do not merge a branch with no verified green preview.
-3. **Merge to main** (squash, this repo's convention): `gh pr merge <n> --repo mortykaidev/agentkip-site --squash --delete-branch=false`.
-   This push to `main` is what triggers the Vercel production deploy — no separate deploy command exists or is needed.
-4. **Poll deployment status** until it resolves (Vercel typically finishes in 1-3 minutes):
-   `gh api repos/mortykaidev/agentkip-site/deployments` or, if the `vercel` CLI/MCP is available
-   and authenticated, use it to check the latest production deployment's state. Poll every ~15s,
-   timeout after 5 minutes — if it hasn't resolved by then, report the in-progress/unknown state
-   rather than declaring success.
-5. **Report the live URL** (`https://agentkip.ai`) and the deployment status (READY / ERROR /
-   timed out), plus the merged commit SHA. If the deploy failed, report the failure and do not
-   attempt to fix it automatically — that's a separate task requiring Brandon's input.
+3. **Merge to main** using the repository's squash convention:
+   `gh pr merge <n> --repo mortykaidev/agentkip-site --squash --delete-branch=false`.
+   Record the resulting full 40-character `origin/main` SHA. Do not assume the PR head SHA survived
+   a squash merge.
+4. **Wait for exact-SHA CI and staging.** Find the `CI` push run for the merged SHA and require it
+   to succeed. Then find `Stage Production` for the same SHA and require it to succeed:
+   - `gh run list --repo mortykaidev/agentkip-site --workflow ci.yml --commit <sha>`
+   - `gh run list --repo mortykaidev/agentkip-site --workflow stage-production.yml --commit <sha>`
+   - `gh run watch <run-id> --repo mortykaidev/agentkip-site --exit-status`
+   Poll for run creation for up to five minutes; allow the run itself up to thirty minutes. A
+   missing, failed, cancelled, or superseded stage is a stop condition.
+5. **Retrieve the staged receipt without sourcing it.** Download the artifact
+   `staged-production-<sha>` from the successful stage run into a temporary directory. Read its
+   `deployment.env` as plain text, validate that `sha=` exactly matches current `origin/main`, and
+   validate that `url=` is an HTTPS `vercel.app` deployment URL. Never shell-source artifact data.
+6. **Dispatch the explicit promotion:**
+   ```bash
+   gh workflow run promote-production.yml \
+     --repo mortykaidev/agentkip-site \
+     --ref main \
+     -f sha=<sha> \
+     -f deployment_url=<staged-url> \
+     -f 'confirmation=PROMOTE agentkip.ai'
+   ```
+   The workflow independently verifies current `main`, READY state, production target, and Vercel
+   Git metadata before it can promote. Watch the run with `gh run watch ... --exit-status`.
+7. **Report the result.** Only call `https://agentkip.ai` live after the promotion workflow and its
+   production smoke tests succeed. Report the full SHA, staged URL, production URL, and promotion
+   run URL. If promotion fails, report the failure; do not retry, redeploy, or roll back without a
+   new explicit instruction from Brandon.
 
 ## What this skill does NOT do
 
-- Does not create Vercel projects, change domains, or touch env vars — see `DEPLOY.md` for
-  one-time setup, already done.
-- Does not run `npm run build` locally as a gate before merging — the PR's Vercel preview build
-  already proved it builds; re-running it here would be redundant ceremony.
+- Does not create Vercel projects, change domains, touch environment variables, or create the
+  required `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` GitHub secrets.
+- Does not bypass `CI`, use a branch head in place of the squash-merge SHA, or promote a deployment
+  whose Vercel metadata does not match current `main`.
+- Does not apply database migrations. Follow the reviewed backup and forward-migration gate in
+  `DEPLOY.md` before promotion when a release changes schema.
 - Does not merge without the sign-off gate above, even if the PR looks obviously fine.

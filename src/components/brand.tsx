@@ -13,6 +13,16 @@ const SEAFOAM = "#7fd8b1";
 const BUTTER = "#f2cf87";
 const CORAL = "#ff9d7a";
 
+/** Compact title-case wordmark used by the public launch shell. */
+export function AgentKipWordmark({ className = "" }: { className?: string }) {
+  return (
+    <span className={`agentkip-wordmark ${className}`}>
+      <span>AgentKip</span>
+      <span className="agentkip-wordmark-dot" aria-hidden="true" />
+    </span>
+  );
+}
+
 /** The "k" monogram with seafoam orbit dot, on a rounded charcoal tile (app icon). */
 export function KipIcon({ size = 40, className }: { size?: number; className?: string }) {
   return (

@@ -5,19 +5,22 @@ import type { ContentMap } from "@/lib/content-types";
 
 export const DEFAULT_CONTENT: ContentMap = {
   hero: {
-    announcement: "Private beta — invites are going out to friends and testers now",
+    announcement: null,
     headline: "Your personal AI agent. On your iPhone. On your server.",
     subhead:
-      "Kip is a native iOS app for a personal AI agent that runs on hardware you own. Real streaming, durable runs, voice, widgets, and on-device Apple Intelligence — with your keys and your data staying home.",
+      "Kip connects your iPhone to a Noggin you control, so your AI can help without becoming someone else’s data.",
     primaryCtaLabel: "Get Kip",
-    secondaryCtaLabel: "See how it compares",
+    secondaryCtaLabel: "See how it works",
   },
   getPage: {
     betaStage: "invite",
-    inviteHeadline: "The beta is invite-only right now",
+    inviteHeadline: "Kip is available by invitation right now.",
     inviteBody:
-      "AgentKip is in a friends-and-testers beta. Ask Brandon for an invite (or join the waitlist below) and you'll get a link when a TestFlight spot opens up.",
+      "Join the waitlist and the current install link will be sent when a beta place becomes available.",
     testflightUrl: null,
+    appStoreUrl: null,
+    nogginStage: "invite",
+    nogginRepositoryUrl: null,
   },
   siteStatus: {
     label: "Private beta",
@@ -189,5 +192,21 @@ export const DEFAULT_CONTENT: ContentMap = {
       result: null,
     },
   ],
-  gallery: [],
+  gallery: [
+    {
+      src: "/product/walkthrough/01-home.webp",
+      alt: "Kip home screen in an offline product preview, ready for a new conversation.",
+      caption: "Start a conversation with Kip.",
+    },
+    {
+      src: "/product/walkthrough/02-compose.webp",
+      alt: "AgentKip composer showing native message controls and model selection.",
+      caption: "Compose from the native iPhone app.",
+    },
+    {
+      src: "/product/walkthrough/05-complete.webp",
+      alt: "AgentKip product preview showing a completed response.",
+      caption: "Keep the result with the run.",
+    },
+  ],
 };
