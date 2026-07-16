@@ -2,6 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 
+const LEGACY_CALLOUT_MASKS: Record<string, string> = {
+  "/product/walkthrough/01-home.webp": "launch-phone-legacy-mask-home",
+  "/product/walkthrough/02-compose.webp": "launch-phone-legacy-mask-compose",
+  "/product/walkthrough/05-complete.webp": "launch-phone-legacy-mask-complete",
+};
+
 export function ProductPhone({
   src = "/product/walkthrough/01-home.webp",
   alt = "AgentKip home screen on iPhone",
@@ -13,6 +19,8 @@ export function ProductPhone({
   priority?: boolean;
   className?: string;
 }) {
+  const legacyCalloutMask = LEGACY_CALLOUT_MASKS[src];
+
   return (
     <div className={`launch-phone ${className}`}>
       <div className="launch-phone-speaker" aria-hidden="true" />
@@ -24,19 +32,78 @@ export function ProductPhone({
         sizes="(max-width: 767px) 300px, (max-width: 1199px) 340px, 390px"
         className="launch-phone-screen"
       />
+      {legacyCalloutMask ? (
+        <span className={`launch-phone-legacy-mask ${legacyCalloutMask}`} aria-hidden="true" />
+      ) : null}
     </div>
   );
 }
 
+const ORBIT_STROKE = "color-mix(in srgb, var(--ink), transparent 76%)";
+
 export function OrbitBackdrop() {
   return (
     <div className="launch-orbits" aria-hidden="true">
-      <span className="launch-orbit launch-orbit-outer" />
-      <span className="launch-orbit launch-orbit-inner" />
-      <span className="launch-satellite launch-satellite-mint" />
-      <span className="launch-satellite launch-satellite-lilac" />
-      <span className="launch-satellite-coral launch-satellite" />
-      <span className="launch-satellite launch-satellite-butter" />
+      <svg
+        viewBox="-320 -170 640 340"
+        preserveAspectRatio="xMidYMid meet"
+        width="100%"
+        height="100%"
+        aria-hidden="true"
+      >
+        <g transform="rotate(-13)">
+          <ellipse
+            rx="305"
+            ry="144"
+            fill="none"
+            stroke={ORBIT_STROKE}
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
+          <circle
+            cx="233.6"
+            cy="-92.6"
+            r="5"
+            fill="var(--mint)"
+            className="animate-breathe"
+            style={{ transformOrigin: "233.6px -92.6px" }}
+          />
+          <circle
+            cx="-249.8"
+            cy="-82.6"
+            r="5"
+            fill="var(--butter)"
+            className="animate-breathe"
+            style={{ transformOrigin: "-249.8px -82.6px" }}
+          />
+        </g>
+        <g transform="rotate(14)">
+          <ellipse
+            rx="235"
+            ry="107"
+            fill="none"
+            stroke={ORBIT_STROKE}
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
+          <circle
+            cx="-213.0"
+            cy="45.2"
+            r="5"
+            fill="var(--lilac)"
+            className="animate-breathe"
+            style={{ transformOrigin: "-213px 45.2px" }}
+          />
+          <circle
+            cx="192.5"
+            cy="61.4"
+            r="5"
+            fill="var(--sky)"
+            className="animate-breathe"
+            style={{ transformOrigin: "192.5px 61.4px" }}
+          />
+        </g>
+      </svg>
     </div>
   );
 }
@@ -46,21 +113,21 @@ const FLOW_STEPS = [
     number: "1",
     tone: "lilac",
     title: "Ask",
-    body: "Start a run from your iPhone.",
+    body: "Tell Kip what you need.",
     preview: <ComposerPreview />,
   },
   {
     number: "2",
     tone: "mint",
     title: "Follow",
-    body: "See progress and requested actions.",
+    body: "See each step as it happens.",
     preview: <ReviewPreview />,
   },
   {
     number: "3",
-    tone: "coral",
+    tone: "butter",
     title: "Done",
-    body: "Keep the result with the run.",
+    body: "The result is saved for you.",
     preview: <DonePreview />,
   },
 ] as const;
@@ -147,7 +214,7 @@ const ARCHITECTURE_ITEMS = [
   },
   {
     title: "Your Noggin",
-    body: "Runs on a server you control.",
+    body: "A small computer that lives at your house.",
     icon: <ServerIcon />,
   },
 ] as const;

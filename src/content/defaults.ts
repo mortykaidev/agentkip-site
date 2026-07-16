@@ -6,9 +6,9 @@ import type { ContentMap } from "@/lib/content-types";
 export const DEFAULT_CONTENT: ContentMap = {
   hero: {
     announcement: null,
-    headline: "Your personal AI agent. On your iPhone. On your server.",
+    headline: "Your personal AI. On your iPhone. In your home.",
     subhead:
-      "Kip connects your iPhone to a Noggin you control, so your AI can help without becoming someone else’s data.",
+      "An iPhone app with its brain on a small computer in your home — so your conversations stay yours.",
     primaryCtaLabel: "Get Kip",
     secondaryCtaLabel: "See how it works",
   },
@@ -37,7 +37,7 @@ export const DEFAULT_CONTENT: ContentMap = {
     {
       question: "Do you see my data?",
       answer:
-        "No. Your conversations, memory, and files live on your own server — the AgentKip project never has access to them. The website itself only stores what it needs to run: your sign-in info (via Clerk), waitlist emails, and any message you send through the contact form.",
+        "No. Your conversations, memory, and files live on your own box — the AgentKip project never has access to them. The website itself only stores what it needs to run: your sign-in info (via Clerk), waitlist emails, and any message you send through the contact form.",
     },
     {
       question: "What does it cost?",
@@ -47,10 +47,10 @@ export const DEFAULT_CONTENT: ContentMap = {
     {
       question: "Why do I need my own API key?",
       answer:
-        "Your server talks straight to the model provider you choose, using a key only you hold. That's what keeps your prompts, your data, and your bill entirely yours — nothing passes through a Kip-run relay.",
+        "Your box talks straight to the model provider you choose, using a key only you hold. That's what keeps your prompts, your data, and your bill entirely yours — nothing passes through a Kip-run relay.",
     },
     {
-      question: "What do I need to run the server?",
+      question: "What do I need to run it?",
       answer:
         "A Mac, a Linux box, a Windows machine with Docker, or a small VPS — basically anything that can stay on and be reachable from your phone (directly on your network, or over Tailscale). It's mostly waiting on API calls, so it doesn't need to be powerful.",
     },
@@ -67,12 +67,12 @@ export const DEFAULT_CONTENT: ContentMap = {
     {
       question: "Is it open source?",
       answer:
-        "The server descends from the open Hermes agent framework. Exactly how the app itself will be distributed and licensed is still being worked out — more details once that's settled.",
+        "It descends from the open Hermes agent framework. Exactly how the app itself will be distributed and licensed is still being worked out — more details once that's settled.",
     },
     {
       question: "What models can I use?",
       answer:
-        "Whatever your server exposes. Go through OpenRouter with a single key for access to a lot of models at once, connect directly to a provider like OpenAI or Anthropic, or run local models through Ollama.",
+        "Whatever your box exposes. Go through OpenRouter with a single key for access to a lot of models at once, connect directly to a provider like OpenAI or Anthropic, or run local models through Ollama.",
     },
     {
       question: "Can it code?",
@@ -196,17 +196,17 @@ export const DEFAULT_CONTENT: ContentMap = {
     {
       src: "/product/walkthrough/01-home.webp",
       alt: "Kip home screen in an offline product preview, ready for a new conversation.",
-      caption: "Start a conversation with Kip.",
+      caption: "Say hello to Kip.",
     },
     {
       src: "/product/walkthrough/02-compose.webp",
       alt: "AgentKip composer showing native message controls and model selection.",
-      caption: "Compose from the native iPhone app.",
+      caption: "Ask in your own words.",
     },
     {
       src: "/product/walkthrough/05-complete.webp",
       alt: "AgentKip product preview showing a completed response.",
-      caption: "Keep the result with the run.",
+      caption: "Your answer, saved for you.",
     },
   ],
 };

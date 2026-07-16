@@ -3,7 +3,7 @@ import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { OsTabs } from "@/app/get/os-tabs";
 import { WaitlistForm } from "@/components/forms/waitlist-form";
-import { ArrowIcon } from "@/components/launch";
+import { ArrowIcon, ProductPhone } from "@/components/launch";
 import { Pill } from "@/components/ui";
 import type { GetPageContent } from "@/lib/content-types";
 import { getContent } from "@/lib/content";
@@ -29,17 +29,30 @@ export default async function GetPage() {
             Open this page on your iPhone. When an App Store or TestFlight release is ready, this
             same link will take you straight there.
           </p>
+          {release.betaStage !== "appstore" && (
+            <Pill tone="neutral" className="mt-5">
+              App Store — coming soon
+            </Pill>
+          )}
         </div>
-        <div className="get-page-qr" aria-label="QR code for agentkip.ai/get">
-          <QRCodeSVG
-            value={GET_URL}
-            size={132}
-            level="M"
-            marginSize={1}
-            bgColor="#f0eee6"
-            fgColor="#181918"
+        <div className="flex flex-col items-center gap-6">
+          <ProductPhone
+            src="/product/walkthrough/01-home.webp"
+            alt="Kip home screen on iPhone, ready to say hello."
+            className="launch-phone-inline"
           />
-          <span>agentkip.ai/get</span>
+          <div className="get-page-qr" aria-label="QR code for agentkip.ai/get">
+            <QRCodeSVG
+              value={GET_URL}
+              size={132}
+              level="M"
+              marginSize={1}
+              bgColor="#f0eee6"
+              fgColor="#181918"
+            />
+            <span>agentkip.ai/get</span>
+            <span>Point your iPhone camera at the code.</span>
+          </div>
         </div>
       </section>
 
@@ -135,6 +148,7 @@ function ReleasePanel({ release }: { release: GetPageContent }) {
       <h2>{release.inviteHeadline}</h2>
       <p>{release.inviteBody}</p>
       <WaitlistForm className="get-waitlist" />
+      <p>Join the list and you&rsquo;ll be first to know the moment a spot opens up.</p>
     </div>
   );
 }

@@ -5,6 +5,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://agentkip.ai";
 const ROUTES = [
   "/",
   "/get",
+  "/how-it-works",
   "/docs/deploy",
   "/ios",
   "/compare",
