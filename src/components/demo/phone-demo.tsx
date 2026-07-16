@@ -80,7 +80,7 @@ export function PhoneDemo() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[360px]">
+    <div className="mx-auto w-full min-w-0 max-w-[360px]">
       {/* Bezel */}
       <div
         ref={frameRef}
@@ -111,13 +111,13 @@ export function PhoneDemo() {
             <div className="min-w-0">
               <p className="text-[15px] font-semibold leading-tight">Kip</p>
               <p className="truncate text-[11px] leading-tight text-[#908e84]">
-                {activeLane.label} lane · {activeLane.caption} · models from your server
+                {activeLane.label} lane · {activeLane.caption} · models from your own box
               </p>
             </div>
           </div>
 
           {/* Model-lane switcher */}
-          <div className="mt-3 flex gap-1.5 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
+          <div className="mt-3 flex min-w-0 gap-1.5 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
             {DEMO_LANES.map((lane) => (
               <button
                 key={lane.id}
@@ -190,7 +190,7 @@ export function PhoneDemo() {
           </div>
 
           {/* Canned prompt chips */}
-          <div className="flex gap-2 overflow-x-auto px-5 pb-2 [scrollbar-width:none]">
+          <div className="flex min-w-0 gap-2 overflow-x-auto px-5 pb-2 [scrollbar-width:none]">
             {DEMO_PROMPTS.map((prompt) => (
               <button
                 key={prompt.id}

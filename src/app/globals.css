@@ -18,7 +18,7 @@
   --ink: #f0eee6;
   --ink-secondary: #aaa69c;
   --ink-muted: #77756e;
-  --accent: #f88763;
+  --accent: #8ec9f0;
   --on-accent: #181918;
   --user-bubble: #302a27;
 
@@ -43,9 +43,12 @@
   --ink: #262624;
   --ink-secondary: #5c5b54;
   --ink-muted: #8a887c;
-  --accent: #2e9e73;
-  --on-accent: #ffffff;
+  --accent: #3d8ac2;
+  --on-accent: #101c26;
   --user-bubble: #ddeee5;
+  --launch-tone-lilac: #665585;
+  --launch-tone-mint: #356b54;
+  --launch-tone-butter: #765116;
 }
 
 @theme inline {
@@ -352,7 +355,7 @@ body {
 .launch-nav-get:hover,
 .launch-primary-button:hover,
 .launch-mobile-get:hover {
-  background: #ff9676;
+  background: color-mix(in srgb, var(--accent), white 10%);
 }
 
 .launch-nav-get:active,
@@ -495,6 +498,34 @@ body {
   border-radius: 35px;
 }
 
+.launch-phone-legacy-mask {
+  position: absolute;
+  z-index: 2;
+  right: 5%;
+  left: 5%;
+  background: #252623;
+  pointer-events: none;
+}
+
+.launch-phone-legacy-mask-home {
+  top: 42.8%;
+  height: 2.2%;
+}
+
+.launch-phone-legacy-mask-compose {
+  top: 44.2%;
+  right: 6%;
+  left: 6%;
+  height: 4.8%;
+}
+
+.launch-phone-legacy-mask-complete {
+  top: 45.8%;
+  right: 6%;
+  left: 6%;
+  height: 5.3%;
+}
+
 .launch-phone-speaker {
   position: absolute;
   z-index: 3;
@@ -513,60 +544,6 @@ body {
   right: -26px;
   bottom: -12px;
   left: -70px;
-}
-
-.launch-orbit {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  border: 1px solid color-mix(in srgb, var(--ink), transparent 76%);
-  border-radius: 50%;
-  transform: translate(-50%, -50%) rotate(-13deg);
-}
-
-.launch-orbit-outer {
-  width: 610px;
-  height: 288px;
-}
-
-.launch-orbit-inner {
-  width: 470px;
-  height: 214px;
-  opacity: 0.65;
-  transform: translate(-50%, -50%) rotate(14deg);
-}
-
-.launch-satellite {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-}
-
-.launch-satellite-mint {
-  top: 19%;
-  right: 19%;
-  background: var(--mint);
-}
-
-.launch-satellite-lilac {
-  top: 69%;
-  left: 13%;
-  background: var(--lilac);
-}
-
-.launch-satellite-coral {
-  right: 9%;
-  bottom: 17%;
-  background: var(--accent);
-}
-
-.launch-satellite-butter {
-  top: 21%;
-  left: 23%;
-  width: 10px;
-  height: 10px;
-  background: var(--butter);
 }
 
 .launch-band {
@@ -600,9 +577,9 @@ body {
   font-weight: 750;
 }
 
-.launch-tone-lilac { color: var(--lilac); }
-.launch-tone-mint { color: var(--mint); }
-.launch-tone-coral { color: var(--accent); }
+.launch-tone-lilac { color: var(--launch-tone-lilac, var(--lilac)); }
+.launch-tone-mint { color: var(--launch-tone-mint, var(--mint)); }
+.launch-tone-butter { color: var(--launch-tone-butter, var(--butter)); }
 
 .launch-step-copy h3,
 .launch-architecture-item h3 {
@@ -720,7 +697,11 @@ body {
   place-items: center;
   border: 1px solid var(--border);
   border-radius: 50%;
-  color: var(--mint);
+  color: var(--launch-tone-mint, var(--mint));
+}
+
+[data-theme="light"] .launch-architecture-icon {
+  border-color: var(--launch-tone-mint);
 }
 
 .launch-architecture-icon svg {
@@ -743,6 +724,7 @@ body {
 }
 
 .launch-get-strip {
+  position: relative;
   min-height: 110px;
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -751,6 +733,26 @@ body {
   border-top: 1px solid var(--border);
   padding: 14px 72px;
   background: var(--surface);
+  overflow: hidden;
+}
+
+/* ---- The one sanctioned gradient moment: a faint sky wash behind the Get Kip strip ---- */
+.launch-get-strip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 620px 220px at 12% 50%,
+    color-mix(in srgb, var(--accent), transparent 90%),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.launch-get-strip > * {
+  position: relative;
+  z-index: 1;
 }
 
 .launch-qr {
@@ -1043,16 +1045,6 @@ body {
     width: 254px;
   }
 
-  .launch-orbit-outer {
-    width: 470px;
-    height: 226px;
-  }
-
-  .launch-orbit-inner {
-    width: 360px;
-    height: 170px;
-  }
-
   .launch-band {
     padding: 30px 22px;
   }
@@ -1090,6 +1082,196 @@ body {
   .launch-footer-meta {
     flex-direction: column;
     padding: 18px 22px;
+  }
+}
+
+/* ---- Home: phone demo album, comparison table, inline phone modifier ---- */
+
+.launch-phone-inline {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: min(240px, 68vw);
+  transform: none;
+}
+
+.home-demo {
+  display: grid;
+  justify-items: center;
+  gap: 28px;
+  border-top: 1px solid var(--border);
+  padding: 64px 56px 80px;
+  text-align: center;
+}
+
+.home-screens {
+  width: 100%;
+}
+
+.home-screens-swipe-cue {
+  display: none;
+}
+
+.home-screens-track {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  padding: 4px 4px 18px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.home-screens-track::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 821px) {
+  .home-screens-track {
+    justify-content: center;
+  }
+}
+
+.home-screens-item {
+  flex: none;
+  scroll-snap-align: center;
+  width: clamp(180px, 62vw, 230px);
+}
+
+.home-screens-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.home-screens-caption {
+  margin-top: 8px;
+  color: var(--ink-secondary);
+  font-size: 12px;
+  text-align: center;
+}
+
+.home-compare-wrap {
+  border-top: 1px solid var(--border);
+  padding: 56px 56px 64px;
+}
+
+.home-compare {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.home-compare th,
+.home-compare td {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 14px;
+  overflow-wrap: anywhere;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.home-compare th {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.home-compare td {
+  color: var(--ink-secondary);
+}
+
+/* Kip's own column (middle, per JSX order: empty | Kip | Most AI apps) gets a faint sky tint to draw the eye */
+.home-compare th:nth-child(2),
+.home-compare td:nth-child(2) {
+  background: color-mix(in srgb, var(--accent), transparent 92%);
+  color: var(--ink);
+}
+
+.home-compare-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration-line: underline;
+  text-underline-offset: 5px;
+}
+
+.home-compare-link:hover {
+  color: var(--accent);
+}
+
+.home-compare-mobile {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .home-demo {
+    padding: 44px 22px 56px;
+  }
+
+  .home-compare-wrap {
+    padding: 36px 22px 44px;
+  }
+
+  .home-screens-swipe-cue {
+    display: block;
+    margin: 8px 0 12px;
+    color: var(--ink-secondary);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .home-compare {
+    display: none;
+  }
+
+  .home-compare-mobile {
+    display: grid;
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .home-compare-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .home-compare-card h3 {
+    margin: 0 0 14px;
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .home-compare-card dl {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+  }
+
+  .home-compare-card dl > div {
+    display: grid;
+    gap: 3px;
+  }
+
+  .home-compare-card dt {
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 650;
+    line-height: 1.4;
+  }
+
+  .home-compare-card dd {
+    margin: 0;
+    color: var(--ink-secondary);
+    font-size: 15px;
+    line-height: 1.5;
   }
 }
 

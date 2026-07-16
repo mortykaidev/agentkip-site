@@ -16,17 +16,21 @@ const gugi = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://agentkip.ai"),
   title: {
-    default: "AgentKip — your personal AI agent, on your iPhone, on your server",
+    default: "AgentKip — your personal AI, on your iPhone, at home with you",
     template: "%s · AgentKip",
   },
   description:
-    "Kip connects your iPhone to a Noggin you control, so your AI can help without becoming someone else's data.",
+    "An iPhone app with its brain on a small computer in your home — so your conversations stay yours.",
   openGraph: {
     siteName: "AgentKip",
+    description:
+      "An iPhone app with its brain on a small computer in your home — so your conversations stay yours.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
+    description:
+      "An iPhone app with its brain on a small computer in your home — so your conversations stay yours.",
   },
 };
 

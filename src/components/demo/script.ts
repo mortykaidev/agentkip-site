@@ -63,7 +63,7 @@ export const DEMO_PROMPTS: DemoPrompt[] = [
 export const COMPOSER_EXCHANGE: Omit<DemoExchange, "userText"> = {
   thinkingLabel: "Reading that…",
   reply:
-    "Nice try — this demo is a scripted tour, not a live model, so I can't actually run that one.\n\nOn your own server I'd take a real swing at it. Grab an invite and ask me again for real.",
+    "Nice try — this demo is a scripted tour, not a live model, so I can't actually run that one.\n\nOn your own Kip box I'd take a real swing at it. Grab an invite and ask me again for real.",
 };
 
 export const DEMO_DISCLAIMER =
