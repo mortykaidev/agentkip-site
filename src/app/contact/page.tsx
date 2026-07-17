@@ -5,7 +5,7 @@ import { ContactForm } from "@/components/forms/contact-form";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Reach Brandon directly — bugs, beta invites, security reports, or just to say hi.",
+  description: "Ask Brandon about AgentKip, the beta, a bug, or a security concern.",
 };
 
 export default async function ContactPage() {
@@ -13,12 +13,12 @@ export default async function ContactPage() {
 
   return (
     <Section className="py-16 sm:py-24">
-      <SectionHeader kicker="Contact" title="Say hello" lead={contact.blurb} />
+      <SectionHeader kicker="Contact" title="Talk to Brandon" lead={contact.blurb} />
       <div className="mt-10 grid max-w-4xl gap-6 md:grid-cols-2">
         <KipCard className="flex flex-col justify-center">
           <h3 className="text-base font-semibold text-ink">Email</h3>
           <p className="mt-2 text-sm leading-relaxed text-ink-secondary">
-            Prefer email? It goes straight to Brandon, no ticket queue in between.
+            Prefer email? Your note goes to Brandon.
           </p>
           <a
             href={`mailto:${contact.email}`}

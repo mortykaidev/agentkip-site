@@ -3,6 +3,7 @@ import Link from "next/link";
 import { KipCard, Kicker, Pill, Section, SectionHeader } from "@/components/ui";
 import { Reveal } from "@/components/reveal";
 import { CodeBlock } from "@/app/get/code-block";
+import { TAILSCALE_LINKS, TAILSCALE_SERVE_COMMAND } from "@/lib/tailscale-links";
 
 export const metadata: Metadata = {
   title: "Deploy your own server",
@@ -157,7 +158,7 @@ export default function DeployDocsPage() {
           <SectionHeader kicker="Exposure" title="Tailscale vs. Cloudflare Tunnel" />
         </Reveal>
         <Reveal delay={80}>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <KipCard className="p-6">
               <Pill tone="mint">Recommended</Pill>
               <p className="mt-4 font-semibold text-ink">Tailscale</p>
@@ -165,8 +166,26 @@ export default function DeployDocsPage() {
                 Private mesh network — only your own devices can reach the server, over an
                 encrypted tunnel, with no public DNS record at all.
               </p>
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                <a
+                  href={TAILSCALE_LINKS.linux}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-semibold text-accent underline underline-offset-4 hover:text-ink"
+                >
+                  Install Tailscale on Linux
+                </a>
+                <a
+                  href={TAILSCALE_LINKS.serve}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-semibold text-accent underline underline-offset-4 hover:text-ink"
+                >
+                  Tailscale Serve guide
+                </a>
+              </div>
               <div className="mt-3">
-                <CodeBlock code={`tailscale serve https / http://127.0.0.1:8642`} />
+                <CodeBlock code={TAILSCALE_SERVE_COMMAND} />
               </div>
             </KipCard>
             <KipCard className="p-6">

@@ -5,9 +5,8 @@ import { Kicker, KipCard, Pill, RoadmapBadge, Section, SectionHeader } from "@/c
 import { Reveal } from "@/components/reveal";
 
 export const metadata: Metadata = {
-  title: "How Kip compares",
-  description:
-    "An honest, sourced comparison of AgentKip with the ChatGPT app, Claude Code, and Codex — different tools for different jobs, including what each does better than Kip.",
+  title: "Pick the AI that fits",
+  description: "Compare AgentKip, ChatGPT, Claude Code, and Codex in plain language.",
 };
 
 /* ---------------------------------------------------------------------------
@@ -15,7 +14,7 @@ export const metadata: Metadata = {
    fact, footnoted to official sources below. No pricing numbers, no guesses
    about internals. Where tools are roughly equal, the cell says so.
 
-   `short` is a 2-5 word compression of `text` for the Apple-style headline
+   `short` is a 1-3 word compression of `text` for the headline
    treatment — it must never introduce a claim the full sentence doesn't
    already make.
 --------------------------------------------------------------------------- */
@@ -229,53 +228,76 @@ function IconUnlock({ className = "" }: IconProps) {
 
 const COMPARE_ROWS: CompareRow[] = [
   {
-    dimension: "Where it runs",
+    dimension: "Main use",
+    icon: IconSparkle,
+    chatgpt: {
+      short: "Everyday help",
+      text: "A ready-to-use assistant for writing, research, images, voice, and everyday questions.",
+      refs: [1],
+    },
+    claudeCode: {
+      short: "Coding agent",
+      text: "A coding agent available across terminal, editor, desktop, web, and mobile surfaces.",
+      refs: [2],
+    },
+    codex: {
+      short: "Coding work",
+      text: "A coding agent for local work, cloud tasks, reviews, and other software projects.",
+      refs: [3],
+    },
+    kip: {
+      short: "iPhone help",
+      text: "An iPhone-first helper for planning, writing, research, scanning, coding, and longer tasks.",
+    },
+  },
+  {
+    dimension: "Where it works",
     icon: IconServer,
     chatgpt: {
-      short: "OpenAI’s cloud",
-      text: "OpenAI’s cloud, with polished native mobile and desktop apps plus chatgpt.com.",
+      short: "OpenAI cloud",
+      text: "ChatGPT is a managed service available on the web and in OpenAI apps.",
       refs: [1],
     },
     claudeCode: {
-      short: "Your terminal, their models",
-      text: "A CLI in your terminal, working directly on your local files; model calls go to Anthropic.",
+      short: "Local or cloud",
+      text: "Claude Code can work with files on your computer or run tasks in Anthropic-managed cloud sessions.",
       refs: [2],
     },
     codex: {
-      short: "CLI plus OpenAI’s cloud",
-      text: "A CLI on your machine, plus cloud agents that run tasks in OpenAI’s infrastructure.",
+      short: "Local or cloud",
+      text: "Codex can work from local tools or run tasks in an OpenAI cloud environment.",
       refs: [3],
     },
     kip: {
-      short: "Your own hardware",
-      text: "A native iOS app paired to a server you run on your own hardware (Mac, Linux, Windows, or Docker).",
+      short: "iPhone plus Noggin",
+      text: "Kip runs on your iPhone and connects to Noggin on a computer you control.",
     },
   },
   {
-    dimension: "Who hosts your conversations & data",
+    dimension: "Saved work",
     icon: IconLock,
     chatgpt: {
-      short: "OpenAI’s servers",
-      text: "OpenAI hosts your conversations on its servers.",
+      short: "OpenAI account",
+      text: "ChatGPT saves chats in your OpenAI account. Retention and model-improvement choices depend on your plan and settings.",
       refs: [1],
     },
     claudeCode: {
-      short: "Local session, cloud inference",
-      text: "Sessions live on your machine; prompts and code context are sent to Anthropic’s API to generate responses.",
+      short: "Local or cloud",
+      text: "Local sessions work with your project; web and mobile tasks can run in Anthropic-managed infrastructure.",
       refs: [2],
     },
     codex: {
-      short: "OpenAI’s infrastructure",
-      text: "Cloud-delegated tasks run and are stored in OpenAI’s infrastructure; CLI sessions live on your machine.",
+      short: "Local or cloud",
+      text: "Local sessions work with files on your computer; cloud tasks use an OpenAI environment.",
       refs: [3],
     },
     kip: {
-      short: "Your server, period",
-      text: "Your server. Conversations, memory, and provider API keys stay on hardware you own.",
+      short: "Your Noggin",
+      text: "Kip saves chats, memory, and AI keys on the computer running your Noggin.",
     },
   },
   {
-    dimension: "Model choice",
+    dimension: "AI choice",
     icon: IconSparkle,
     chatgpt: {
       short: "OpenAI models only",
@@ -293,31 +315,31 @@ const COMPARE_ROWS: CompareRow[] = [
       refs: [3],
     },
     kip: {
-      short: "Whatever your server exposes",
-      text: "Provider-agnostic: the app shows whatever models your server exposes, grouped into human lanes — Quick, Everyday, Deep, Best, Code, Budget, Vision.",
+      short: "Your choice",
+      text: "Kip shows the models connected to your Noggin, including supported online and local options.",
     },
   },
   {
-    dimension: "iOS surface",
+    dimension: "iPhone",
     icon: IconPhone,
     chatgpt: {
-      short: "Strong native app",
-      text: "A strong native iOS app — chat, voice, and image input in one place.",
+      short: "Full app",
+      text: "ChatGPT has an iPhone app with chat, voice, and image features.",
       refs: [1],
     },
     claudeCode: {
-      short: "No iOS app",
-      text: "None — Claude Code is a terminal tool.",
+      short: "Claude iOS app",
+      text: "Claude Code tasks can start or continue in the Claude iOS app, and Remote Control can follow a local session.",
       refs: [2],
     },
     codex: {
-      short: "Tasks via the ChatGPT app",
-      text: "Cloud tasks can be started and reviewed from inside the ChatGPT iOS app.",
+      short: "Remote in ChatGPT",
+      text: "Remote in the ChatGPT mobile app can start, steer, review, and organize Codex work on connected computers.",
       refs: [3],
     },
     kip: {
-      short: "Deep system integration",
-      text: "Deep system integration: 7 widgets, 2 Live Activities (incl. Dynamic Island), 6 Control Center / Lock Screen controls, Siri & App Intents, Spotlight, Handoff, and a Share extension.",
+      short: "Full app",
+      text: "Kip has widgets, Live Activities, Control Center actions, Siri shortcuts, Spotlight, Handoff, and sharing.",
       refs: [4],
     },
   },
@@ -325,70 +347,70 @@ const COMPARE_ROWS: CompareRow[] = [
     dimension: "Voice",
     icon: IconMic,
     chatgpt: {
-      short: "Best-in-class voice",
-      text: "Best-in-class: natural, low-latency voice conversations built into the app.",
+      short: "Voice chat",
+      text: "ChatGPT supports back-and-forth voice conversations in its mobile app.",
       refs: [1],
     },
     claudeCode: {
-      short: "No voice interface",
+      short: "No built-in",
       text: "No built-in voice interface.",
       refs: [2],
     },
     codex: {
-      short: "No voice interface",
+      short: "No built-in",
       text: "No built-in voice interface.",
       refs: [3],
     },
     kip: {
-      short: "Dictation & read-aloud",
-      text: "Dictation, push-to-talk, and background read-aloud with an on-device TTS fallback. Not a realtime voice conversation like ChatGPT’s.",
+      short: "Dictate and listen",
+      text: "Kip supports dictation, push-to-talk, and read-aloud, but not a live voice conversation like ChatGPT.",
     },
   },
   {
     dimension: "Works offline",
     icon: IconWifiOff,
     chatgpt: {
-      short: "No",
-      text: "No — it needs a connection to OpenAI.",
+      short: "No AI",
+      text: "ChatGPT needs a network connection for AI responses.",
       refs: [1],
     },
     claudeCode: {
-      short: "No",
-      text: "No — model calls need a connection to Anthropic. (Roughly equal to the others here.)",
+      short: "No AI",
+      text: "Claude Code needs a network connection for AI processing.",
       refs: [2],
     },
     codex: {
-      short: "No",
-      text: "No — model calls need a network connection. (Roughly equal to the others here.)",
+      short: "No AI",
+      text: "Codex needs a network connection for AI processing.",
       refs: [3],
     },
     kip: {
-      short: "Only a few on-device bits",
-      text: "Limited, and we want to be precise: only specific on-device Apple Intelligence features work offline (drafts, session titles, briefings). Talking to your agent still requires reaching your server.",
+      short: "Small on-device jobs",
+      text: "A few Apple Intelligence extras can run on the iPhone. Normal Kip requests still need Noggin and the chosen AI.",
       refs: [4],
     },
   },
   {
-    dimension: "Long-running tasks from a phone",
+    dimension: "Long tasks",
     icon: IconClock,
     chatgpt: {
-      short: "Some, in the cloud",
-      text: "Some tasks (like Deep Research) continue running in OpenAI’s cloud after you ask.",
+      short: "Cloud tasks",
+      text: "Some ChatGPT tasks can continue in OpenAI’s cloud after you leave the chat.",
       refs: [1],
     },
     claudeCode: {
-      short: "Not phone-driven",
-      text: "Sessions are tied to your terminal — the phone isn’t the interface.",
+      short: "Local or cloud",
+      text: "Claude Code supports longer local sessions, cloud sessions, and scheduled routines.",
       refs: [2],
     },
     codex: {
-      short: "Yes, delegate and review",
-      text: "Yes — delegate coding tasks to cloud agents, close the app, and review results later.",
+      short: "Cloud tasks",
+      text: "Codex cloud tasks can continue in a managed environment for later review.",
       refs: [3],
     },
     kip: {
-      short: "Yes, durable on your server",
-      text: "Yes — durable runs survive backgrounding, network drops, and app restarts, with a Live Activity tracking progress and a watchdog for hung runs.",
+      short: "Noggin tasks",
+      text: "Kip can keep a task on Noggin moving while the iPhone app is in the background.",
     },
   },
   {
@@ -400,100 +422,108 @@ const COMPARE_ROWS: CompareRow[] = [
       refs: [1],
     },
     claudeCode: {
-      short: "API usage or subscription",
+      short: "Plan or usage",
       text: "Anthropic API usage billing, or included with paid Claude subscription plans.",
       refs: [2],
     },
     codex: {
-      short: "Included with ChatGPT plans",
+      short: "ChatGPT plans",
       text: "Included with paid ChatGPT plans; API-based usage is also available.",
       refs: [3],
     },
     kip: {
-      short: "Free app, your own keys",
-      text: "The app beta is free. You bring your own provider API keys and pay providers directly for what you use — no markup, but also no bundled flat-rate plan.",
+      short: "Pay for use",
+      text: "The Kip beta is free. You pay the AI company you choose for what you use, with no AgentKip markup.",
     },
   },
   {
     dimension: "Setup effort",
     icon: IconWrench,
     chatgpt: {
-      short: "Zero effort",
-      text: "Zero — download, sign in, done. This is the bar for effortless, and the others don’t match it.",
+      short: "Sign in",
+      text: "Open the app or website and sign in.",
       refs: [1],
     },
     claudeCode: {
-      short: "Low effort",
-      text: "Low — install the CLI and authenticate. (Roughly equal to Codex.)",
+      short: "Install and connect",
+      text: "Install Claude Code, then connect an Anthropic, Claude, or supported cloud account.",
       refs: [2],
     },
     codex: {
-      short: "Low effort",
-      text: "Low — install the CLI or use it from ChatGPT. (Roughly equal to Claude Code.)",
+      short: "Install or sign-in",
+      text: "Use a Codex surface and connect the account or project it needs.",
       refs: [3],
     },
     kip: {
-      short: "Highest — you self-host",
-      text: "Honestly the highest here, and a real tradeoff: you install and run your own server, add provider keys, and pair your phone by QR code. That effort is the price of owning your data.",
+      short: "A few steps",
+      text: "Set up Noggin, add an AI key, and pair your iPhone with a code.",
     },
   },
   {
-    dimension: "Open / self-hosted",
+    dimension: "Self-hosted",
     icon: IconUnlock,
     chatgpt: {
-      short: "Fully managed, closed",
-      text: "Fully managed and closed — nothing to host, nothing to self-host.",
+      short: "No",
+      text: "ChatGPT is a managed OpenAI service.",
       refs: [1],
     },
     claudeCode: {
-      short: "Proprietary CLI",
-      text: "Proprietary CLI; models are hosted by Anthropic — there is no self-hosted model option.",
+      short: "No",
+      text: "Claude Code uses Claude through Anthropic or a supported cloud service.",
       refs: [2],
     },
     codex: {
-      short: "CLI open, models closed",
-      text: "The Codex CLI is open source; models are hosted by OpenAI.",
+      short: "Tools only",
+      text: "Some Codex tools are open source, while OpenAI provides the hosted AI models and cloud service.",
       refs: [3],
     },
     kip: {
-      short: "Self-hosted by design",
-      text: "Self-hosted by design — the agent server runs entirely on your hardware. The iOS app is in invite-only beta.",
+      short: "Yes",
+      text: "You run Noggin on a computer you control. Online AI companies still process requests sent to their models.",
     },
   },
 ];
 
-/* Official documentation roots only — no fabricated deep links. */
+/* Official documentation only. Recheck these claims when the products change. */
 const SOURCES: { id: number; label: string; links: { text: string; href: string }[] }[] = [
   {
     id: 1,
-    label: "ChatGPT — official product page and OpenAI Help Center (apps, voice, plans, data handling).",
+    label: "ChatGPT — official pricing and voice help.",
     links: [
-      { text: "chatgpt.com", href: "https://chatgpt.com" },
-      { text: "help.openai.com", href: "https://help.openai.com" },
+      { text: "ChatGPT pricing", href: "https://openai.com/chatgpt/pricing/" },
+      { text: "Voice help", href: "https://help.openai.com/en/articles/8400625-voice-mode" },
     ],
   },
   {
     id: 2,
-    label: "Claude Code — Anthropic’s official documentation (installation, how it works, billing).",
+    label: "Claude Code — official overview and setup guide.",
     links: [
       {
-        text: "docs.anthropic.com — Claude Code",
-        href: "https://docs.anthropic.com/en/docs/claude-code/overview",
+        text: "Claude Code overview",
+        href: "https://code.claude.com/docs/en/overview",
+      },
+      {
+        text: "Claude Code setup",
+        href: "https://code.claude.com/docs/en/quickstart",
       },
     ],
   },
   {
     id: 3,
-    label: "Codex — OpenAI’s official Codex pages (CLI, cloud tasks, ChatGPT integration, plans).",
+    label: "Codex — official overview, cloud guide, and pricing.",
     links: [
-      { text: "openai.com/codex", href: "https://openai.com/codex/" },
-      { text: "developers.openai.com/codex", href: "https://developers.openai.com/codex/" },
+      { text: "Codex overview", href: "https://learn.chatgpt.com/docs" },
+      { text: "Codex cloud", href: "https://learn.chatgpt.com/docs/cloud" },
+      { text: "Codex pricing", href: "https://learn.chatgpt.com/docs/pricing" },
+      {
+        text: "Codex on phone",
+        href: "https://learn.chatgpt.com/blog/mastering-codex-remote-for-engineering",
+      },
     ],
   },
   {
     id: 4,
-    label:
-      "Apple Developer — the system frameworks Kip builds on: WidgetKit (widgets), ActivityKit (Live Activities / Dynamic Island), and FoundationModels (on-device Apple Intelligence).",
+    label: "Apple Developer — widgets, Live Activities, and on-device Apple Intelligence.",
     links: [
       {
         text: "WidgetKit",
@@ -515,26 +545,22 @@ const TLDR_CARDS: { name: string; tone: "sky" | "lilac" | "peach" | "mint"; blur
   {
     name: "ChatGPT app",
     tone: "sky",
-    blurb:
-      "Reach for it when you want zero setup and the most polished all-purpose assistant — voice conversations, image understanding, and managed everything.",
+    blurb: "Pick it for a ready-to-use helper with voice and no setup.",
   },
   {
     name: "Claude Code",
     tone: "lilac",
-    blurb:
-      "Reach for it when you’re at a terminal doing deep, repo-scale coding work and want an agent living inside your codebase.",
+    blurb: "Pick it for coding across your terminal, editor, desktop, web, or phone.",
   },
   {
     name: "Codex",
     tone: "peach",
-    blurb:
-      "Reach for it when you want to hand coding tasks to cloud agents in parallel and come back to review the results.",
+    blurb: "Pick it for coding work across local and cloud tools.",
   },
   {
     name: "AgentKip",
     tone: "mint",
-    blurb:
-      "Reach for it when you want a personal agent that lives on your own hardware, uses your own API keys, and is driven from a genuinely native iPhone app.",
+    blurb: "Pick it for iPhone help connected to a computer you control.",
   },
 ];
 
@@ -553,18 +579,8 @@ function CellText({ cell }: { cell: Cell }) {
   );
 }
 
-/** Apple-style cell: bold short claim, full sentence as muted fine print below. */
 function CompareCell({ cell }: { cell: Cell }) {
-  return (
-    <>
-      <p className="text-[15px] font-semibold leading-snug text-ink sm:text-[16px]">
-        {cell.short}
-      </p>
-      <p className="mt-2 text-[12px] leading-relaxed text-ink-muted sm:text-[13px]">
-        <CellText cell={cell} />
-      </p>
-    </>
-  );
+  return <p className="text-[15px] font-semibold leading-snug text-ink">{cell.short}</p>;
 }
 
 export default function ComparePage() {
@@ -574,9 +590,9 @@ export default function ComparePage() {
       <Section>
         <Reveal>
           <SectionHeader
-            kicker="How Kip compares"
-            title="Different tools for different jobs"
-            lead="Kip isn’t a model, and it isn’t trying to replace the companies that make them. It works with the providers’ models through your own API keys. ChatGPT, Claude Code, and Codex are excellent at what they do — this page maps where each one shines, sources included."
+            kicker="Compare"
+            title="Pick the AI that fits"
+            lead="Each tool starts in a different place. Choose the one that matches what you want to do."
           />
         </Reveal>
       </Section>
@@ -584,7 +600,7 @@ export default function ComparePage() {
       {/* TL;DR cards */}
       <Section className="mt-14">
         <Reveal>
-          <Kicker className="mb-5">The short version</Kicker>
+          <Kicker className="mb-5">Start here</Kicker>
         </Reveal>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TLDR_CARDS.map((card, i) => (
@@ -602,15 +618,15 @@ export default function ComparePage() {
       <Section className="mt-20">
         <Reveal>
           <SectionHeader
-            kicker="The detail"
-            title="Side by side, with sources"
-            lead="Every claim about another tool is footnoted to its official documentation. If a cell is wrong or goes stale, we want to know — there’s a link at the bottom for exactly that."
+            kicker="Side by side"
+            title="The short comparison"
+            lead="Open any row below the table for an explanation and official sources."
           />
         </Reveal>
         <Reveal className="mt-8">
           <div className="kip-card overflow-hidden p-0">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[960px] border-collapse text-left text-sm">
+              <table className="w-full min-w-[760px] border-collapse text-left text-sm">
                 <caption className="sr-only">
                   Feature comparison of the ChatGPT app, Claude Code, Codex, and AgentKip
                 </caption>
@@ -618,7 +634,7 @@ export default function ComparePage() {
                   <tr className="border-b border-hairline">
                     <th scope="col" className="w-[15%] px-5 py-4 align-bottom">
                       <span className="text-[13px] font-semibold uppercase tracking-[0.06em] text-ink-muted">
-                        Dimension
+                        Topic
                       </span>
                     </th>
                     <th scope="col" className="w-[21%] px-5 py-4 align-bottom">
@@ -669,19 +685,49 @@ export default function ComparePage() {
         </Reveal>
         <Reveal className="mt-4">
           <p className="text-xs text-ink-muted">
-            Superscripts link to the official sources listed below. We deliberately avoid quoting
-            exact prices or internal details — those change; the official pages are the truth.
+            Product details change. The explanations below link to the official pages checked for
+            this comparison.
           </p>
         </Reveal>
+        <div className="mt-6 space-y-3">
+          {COMPARE_ROWS.map((row) => (
+            <details key={row.dimension} className="group kip-card overflow-hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-semibold text-ink [&::-webkit-details-marker]:hidden [&::marker]:hidden">
+                {row.dimension}
+                <span
+                  aria-hidden="true"
+                  className="text-xl text-ink-muted transition-transform group-open:rotate-45"
+                >
+                  +
+                </span>
+              </summary>
+              <div className="mt-4 grid gap-4 border-t border-hairline pt-4 sm:grid-cols-2">
+                {([
+                  ["ChatGPT app", row.chatgpt],
+                  ["Claude Code", row.claudeCode],
+                  ["Codex", row.codex],
+                  ["AgentKip", row.kip],
+                ] as const).map(([name, cell]) => (
+                  <div key={name}>
+                    <h3 className="text-sm font-semibold text-ink">{name}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-ink-secondary">
+                      <CellText cell={cell} />
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </details>
+          ))}
+        </div>
       </Section>
 
-      {/* What they do better */}
+      {/* Where other tools lead */}
       <Section className="mt-20">
         <Reveal>
           <SectionHeader
-            kicker="Credit where it’s due"
-            title="What these tools do better than Kip"
-            lead="We’d rather tell you this ourselves. Each of these tools beats Kip at something real."
+            kicker="Good reasons to choose"
+            title="Where the others lead"
+            lead="Kip is not the best fit for every job."
           />
         </Reveal>
         <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -689,9 +735,8 @@ export default function ComparePage() {
             <KipCard className="h-full">
               <Pill tone="sky">ChatGPT</Pill>
               <p className="mt-3 text-sm leading-relaxed text-ink-secondary">
-                Zero setup, fully managed infrastructure, and the most polished multimodal
-                experience on the market — realtime voice, image understanding, and a free tier.
-                If you never want to think about servers, ChatGPT is the right call.
+                ChatGPT is easier to start and supports live voice conversations. Choose it when
+                you do not want to set up or manage anything.
               </p>
             </KipCard>
           </Reveal>
@@ -699,9 +744,8 @@ export default function ComparePage() {
             <KipCard className="h-full">
               <Pill tone="lilac">Claude Code</Pill>
               <p className="mt-3 text-sm leading-relaxed text-ink-secondary">
-                Deep, repo-scale coding in the terminal. It reads, edits, and tests across an
-                entire codebase in ways a phone-first agent doesn’t. For serious hands-on-keyboard
-                development sessions, it’s the better tool.
+                Claude Code is built for software work across local and cloud surfaces. Choose it
+                when the project itself is the center of the task.
               </p>
             </KipCard>
           </Reveal>
@@ -709,9 +753,8 @@ export default function ComparePage() {
             <KipCard className="h-full">
               <Pill tone="peach">Codex</Pill>
               <p className="mt-3 text-sm leading-relaxed text-ink-secondary">
-                Cloud-delegated, parallel coding tasks with managed compute. Kick off several
-                tasks at once and review the diffs later — Kip’s durable runs are one task on your
-                own server, not a fleet in someone else’s cloud.
+                Codex offers dedicated coding surfaces and managed cloud tasks. Choose it when the
+                work belongs in a software project.
               </p>
             </KipCard>
           </Reveal>
@@ -756,19 +799,18 @@ export default function ComparePage() {
         </Reveal>
       </Section>
 
-      {/* Honesty footer */}
+      {/* Availability footer */}
       <Section className="mt-16">
         <Reveal>
           <KipCard className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center gap-3">
               <RoadmapBadge />
               <p className="text-sm text-ink-secondary">
-                One more disclosure: delegating work from Kip to Claude Code and Codex is planned —
-                it is not shipped today. Nothing on this page should read otherwise.
+                Sending work from Kip to Claude Code or Codex is planned, not available today.
               </p>
             </div>
             <p className="text-sm text-ink-secondary">
-              Spotted something outdated or unfair to another tool?{" "}
+              Found something outdated?{" "}
               <Link href="/contact" className="text-accent hover:underline">
                 Tell us
               </Link>{" "}

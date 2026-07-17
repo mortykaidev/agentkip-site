@@ -4,7 +4,7 @@ import { ArrowIcon } from "@/components/launch";
 
 export const metadata: Metadata = {
   title: "Support",
-  description: "Contact AgentKip support and find setup resources.",
+  description: "Get help with AgentKip, the beta, or connecting Kip to Noggin.",
 };
 
 const SUPPORT_EMAIL = "hello@agentkip.ai";
@@ -16,8 +16,7 @@ export default function SupportPage() {
         <p>AgentKip support</p>
         <h1>How can we help?</h1>
         <p>
-          For an install question, beta issue, or a problem connecting Kip to Noggin, email us at
-          the address below.
+          Ask about installing the beta, using Kip, or connecting to Noggin.
         </p>
         <a href={`mailto:${SUPPORT_EMAIL}`} className="launch-primary-button">
           Email {SUPPORT_EMAIL} <ArrowIcon />
@@ -30,18 +29,18 @@ export default function SupportPage() {
         </h2>
         <SupportLink
           href="/get"
-          title="Install or join the beta"
-          body="See the current verified iPhone release destination."
+          title="Get Kip"
+          body="Install the current beta or join the waitlist."
         />
         <SupportLink
           href="/docs/deploy"
           title="Noggin setup"
-          body="Read the available self-hosting documentation."
+          body="Set up the computer that Kip connects to."
         />
         <SupportLink
           href="/faq"
-          title="Common questions"
-          body="Browse current product and availability answers."
+          title="Quick answers"
+          body="Read about cost, privacy, devices, and the beta."
         />
       </section>
     </div>

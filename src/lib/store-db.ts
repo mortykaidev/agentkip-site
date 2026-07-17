@@ -3,6 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { contactMessages, contentSections, waitlist } from "@/db/schema";
 import type { ContentKey, ContentMap } from "@/lib/content-types";
+import { contentStorageKey } from "@/lib/store-types";
 import type {
   AddWaitlistResult,
   ContactMessageEntry,
@@ -22,19 +23,21 @@ export function createDbStore(databaseUrl: string): SiteStore {
 
   return {
     async getSection<K extends ContentKey>(key: K): Promise<ContentMap[K] | null> {
+      const storedKey = contentStorageKey(key);
       const rows = await db
         .select({ value: contentSections.value })
         .from(contentSections)
-        .where(eq(contentSections.key, key))
+        .where(eq(contentSections.key, storedKey))
         .limit(1);
       const row = rows[0];
       return row ? (row.value as ContentMap[K]) : null;
     },
 
     async setSection<K extends ContentKey>(key: K, value: ContentMap[K]): Promise<void> {
+      const storedKey = contentStorageKey(key);
       await db
         .insert(contentSections)
-        .values({ key, value, updatedAt: new Date() })
+        .values({ key: storedKey, value, updatedAt: new Date() })
         .onConflictDoUpdate({
           target: contentSections.key,
           set: { value, updatedAt: new Date() },
@@ -42,7 +45,7 @@ export function createDbStore(databaseUrl: string): SiteStore {
     },
 
     async deleteSection(key: ContentKey): Promise<void> {
-      await db.delete(contentSections).where(eq(contentSections.key, key));
+      await db.delete(contentSections).where(eq(contentSections.key, contentStorageKey(key)));
     },
 
     async addWaitlistEmail(email: string): Promise<AddWaitlistResult> {

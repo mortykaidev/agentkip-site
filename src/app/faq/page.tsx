@@ -4,9 +4,8 @@ import { Section, SectionHeader } from "@/components/ui";
 import { Reveal } from "@/components/reveal";
 
 export const metadata: Metadata = {
-  title: "FAQ",
-  description:
-    "Answers to the questions people actually ask about AgentKip — data, cost, devices, and what's shipped today.",
+  title: "Quick answers",
+  description: "Quick answers about AgentKip, setup, cost, privacy, devices, and the beta.",
 };
 
 export default async function FaqPage() {
@@ -16,8 +15,8 @@ export default async function FaqPage() {
     <Section className="py-16 sm:py-24">
       <SectionHeader
         kicker="FAQ"
-        title="Questions people actually ask"
-        lead="Honest answers about data, cost, devices, and what's actually shipped versus what's coming."
+        title="Quick answers"
+        lead="Start here for setup, cost, privacy, and beta questions."
       />
       <div className="mt-10 max-w-3xl space-y-3">
         {faq.map((item, i) => (

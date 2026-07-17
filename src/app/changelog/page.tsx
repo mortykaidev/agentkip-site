@@ -3,8 +3,8 @@ import { getContent } from "@/lib/content";
 import { Section, SectionHeader } from "@/components/ui";
 
 export const metadata: Metadata = {
-  title: "Changelog",
-  description: "Dated build notes for AgentKip — what actually shipped, in order.",
+  title: "What changed",
+  description: "A dated list of changes available in AgentKip.",
 };
 
 export default async function ChangelogPage() {
@@ -12,7 +12,7 @@ export default async function ChangelogPage() {
 
   return (
     <Section className="py-16 sm:py-24">
-      <SectionHeader kicker="Changelog" title="Build notes" lead="What actually shipped, dated." />
+      <SectionHeader kicker="Changelog" title="What changed" lead="New work, in date order." />
       <div className="relative mt-10 max-w-2xl">
         <div
           aria-hidden="true"

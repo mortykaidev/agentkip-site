@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CodeBlock } from "@/app/get/code-block";
+import { TAILSCALE_LINKS, TAILSCALE_SERVE_COMMAND } from "@/lib/tailscale-links";
 
 /**
  * Client-side OS tab switcher for the "run your server" quickstart on /get.
@@ -67,7 +68,7 @@ function Step({
 }: {
   n: number;
   title: string;
-  body?: string;
+  body?: React.ReactNode;
   code?: string;
   codeLabel?: string;
 }) {
@@ -78,7 +79,7 @@ function Step({
       </span>
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-ink">{title}</p>
-        {body ? <p className="mt-1 text-sm text-ink-secondary">{body}</p> : null}
+        {body ? <div className="mt-1 text-sm text-ink-secondary">{body}</div> : null}
         {code ? (
           <div className="mt-3">
             <CodeBlock code={code} label={codeLabel} />
@@ -86,6 +87,40 @@ function Step({
         ) : null}
       </div>
     </li>
+  );
+}
+
+function TailscaleResources({
+  description,
+  installHref,
+  installLabel,
+}: {
+  description: string;
+  installHref: string;
+  installLabel: string;
+}) {
+  return (
+    <>
+      <p>{description}</p>
+      <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+        <a
+          href={installHref}
+          target="_blank"
+          rel="noreferrer"
+          className="font-semibold text-accent underline underline-offset-4 hover:text-ink"
+        >
+          {installLabel}
+        </a>
+        <a
+          href={TAILSCALE_LINKS.serve}
+          target="_blank"
+          rel="noreferrer"
+          className="font-semibold text-accent underline underline-offset-4 hover:text-ink"
+        >
+          Tailscale Serve guide
+        </a>
+      </p>
+    </>
   );
 }
 
@@ -131,11 +166,17 @@ function MacLinuxSteps({
         n={6}
         title="Expose it over Tailscale — or skip this with the agentkip.app relay"
         body={
-          os === "macos"
-            ? "Install Tailscale, sign in, then serve the local port with TLS. Never expose plain http:// on an untrusted LAN. Prefer not to install anything? The Noggin desktop app can provision an agentkip.app relay URL instead."
-            : "Same story on Linux — Tailscale gives you a real HTTPS hostname without opening any ports. The agentkip.app relay is the no-install alternative."
+          <TailscaleResources
+            installHref={os === "macos" ? TAILSCALE_LINKS.mac : TAILSCALE_LINKS.linux}
+            installLabel={os === "macos" ? "Install Tailscale on Mac" : "Install Tailscale on Linux"}
+            description={
+              os === "macos"
+                ? "Sign in to Tailscale, then share Noggin privately over HTTPS. The agentkip.app relay is the no-install option."
+                : "Tailscale gives Noggin a private HTTPS address without opening router ports. The agentkip.app relay is the no-install option."
+            }
+          />
         }
-        code={`tailscale serve https / http://127.0.0.1:8642`}
+        code={TAILSCALE_SERVE_COMMAND}
       />
       <Step
         n={7}
@@ -181,8 +222,14 @@ function WindowsSteps({ repositoryUrl }: { repositoryUrl: string }) {
       <Step
         n={6}
         title="Expose it over Tailscale, then pair"
-        body="Same rule as every other platform: pair over Tailscale/HTTPS or the agentkip.app relay, never plain http:// on an untrusted LAN."
-        code={`tailscale serve https / http://127.0.0.1:8642`}
+        body={
+          <TailscaleResources
+            installHref={TAILSCALE_LINKS.windows}
+            installLabel="Install Tailscale on Windows"
+            description="Pair over Tailscale or the agentkip.app relay. Never use plain HTTP on a network you do not trust."
+          />
+        }
+        code={TAILSCALE_SERVE_COMMAND}
       />
     </StepList>
   );
@@ -216,8 +263,14 @@ function DockerSteps({ repositoryUrl }: { repositoryUrl: string }) {
       <Step
         n={5}
         title="Expose it over Tailscale, then pair"
-        body="Pair over Tailscale/HTTPS or the agentkip.app relay — never plain http:// on an untrusted LAN. Deeper guidance is on the security page."
-        code={`tailscale serve https / http://127.0.0.1:8642`}
+        body={
+          <TailscaleResources
+            installHref={TAILSCALE_LINKS.download}
+            installLabel="Get Tailscale for your host"
+            description="Run Tailscale on the computer hosting Docker, or use the agentkip.app relay. Never pair over plain HTTP on a network you do not trust."
+          />
+        }
+        code={TAILSCALE_SERVE_COMMAND}
       />
     </StepList>
   );

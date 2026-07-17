@@ -4,8 +4,8 @@ const COLUMNS = [
   {
     heading: "Product",
     links: [
-      { href: "/#product", label: "Overview" },
-      { href: "/how-it-works", label: "How it works" },
+      { href: "/#what-kip-can-do", label: "What Kip can do" },
+      { href: "/how-it-works", label: "How Kip works" },
       { href: "/get", label: "Get Kip" },
       { href: "/gallery", label: "Gallery" },
     ],
@@ -13,7 +13,7 @@ const COLUMNS = [
   {
     heading: "Resources",
     links: [
-      { href: "/docs/deploy", label: "Documentation" },
+      { href: "/docs/deploy", label: "Setup guide" },
       { href: "/support", label: "Support" },
       { href: "/faq", label: "FAQ" },
     ],
@@ -50,7 +50,7 @@ export function Footer() {
 
       <div className="launch-footer-meta">
         <p>© {new Date().getFullYear()} Hayward Imagination Company LLC</p>
-        <p>AgentKip is built to connect to a Noggin you control.</p>
+        <p>Kip connects to a Noggin you control.</p>
       </div>
     </footer>
   );

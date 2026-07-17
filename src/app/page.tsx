@@ -1,27 +1,24 @@
 import Link from "next/link";
 import { ArrowIcon, GetKipStrip, OrbitBackdrop, ProductPhone, RunFlow } from "@/components/launch";
-import { CompareStrip, DemoSection, ScreensStrip } from "@/components/home-sections";
+import { BenefitsSection, CompareStrip, DemoSection, ScreensStrip } from "@/components/home-sections";
+import { getContent } from "@/lib/content";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [hero, benefits] = await Promise.all([getContent("hero"), getContent("homeBenefits")]);
+
   return (
     <div className="launch-page">
       <section className="launch-hero" aria-labelledby="launch-title">
         <div className="launch-hero-copy">
-          <h1 id="launch-title">
-            <span>Your personal AI.</span>
-            <span>On your iPhone.</span>
-            <span>In your home.</span>
-          </h1>
-          <p className="launch-hero-subhead">
-            An iPhone app with its brain on a small computer in your home — so your conversations
-            stay yours.
-          </p>
+          {hero.announcement ? <p className="get-eyebrow mb-4">{hero.announcement}</p> : null}
+          <h1 id="launch-title">{hero.headline}</h1>
+          <p className="launch-hero-subhead">{hero.subhead}</p>
           <div className="launch-hero-actions">
             <Link href="/get" className="launch-primary-button">
-              Get Kip
+              {hero.primaryCtaLabel}
             </Link>
-            <Link href="/how-it-works" className="launch-text-link">
-              How it works <ArrowIcon />
+            <Link href="/#what-kip-can-do" className="launch-text-link">
+              {hero.secondaryCtaLabel} <ArrowIcon />
             </Link>
           </div>
         </div>
@@ -33,6 +30,7 @@ export default function HomePage() {
       </section>
 
       <RunFlow />
+      <BenefitsSection benefits={benefits} />
       <DemoSection />
       <ScreensStrip />
       <CompareStrip />

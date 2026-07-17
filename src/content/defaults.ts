@@ -6,17 +6,42 @@ import type { ContentMap } from "@/lib/content-types";
 export const DEFAULT_CONTENT: ContentMap = {
   hero: {
     announcement: null,
-    headline: "Your personal AI. On your iPhone. In your home.",
+    headline: "Whatever you’re trying to do, Kip can help.",
     subhead:
-      "An iPhone app with its brain on a small computer in your home — so your conversations stay yours.",
+      "Plan the business. Write the email. Research the idea. Fix the code. All from your iPhone.",
     primaryCtaLabel: "Get Kip",
-    secondaryCtaLabel: "See how it works",
+    secondaryCtaLabel: "See what Kip can do",
   },
+  homeBenefits: [
+    {
+      title: "Plan & organize",
+      description: "Turn a big idea into clear next steps.",
+    },
+    {
+      title: "Write & research",
+      description: "Draft, rewrite, summarize, and find what matters.",
+    },
+    {
+      title: "Build & fix",
+      description: "Work through code, errors, and projects with you.",
+    },
+    {
+      title: "Scan & understand",
+      description: "Read receipts, screenshots, documents, and photos.",
+    },
+    {
+      title: "Talk & listen",
+      description: "Ask by voice and hear answers when your hands are busy.",
+    },
+    {
+      title: "Keep going",
+      description: "Run longer tasks and check progress from your phone.",
+    },
+  ],
   getPage: {
     betaStage: "invite",
-    inviteHeadline: "Kip is available by invitation right now.",
-    inviteBody:
-      "Join the waitlist and the current install link will be sent when a beta place becomes available.",
+    inviteHeadline: "Kip is invite-only for now.",
+    inviteBody: "Join the waitlist and we’ll email you when a beta place opens.",
     testflightUrl: null,
     appStoreUrl: null,
     nogginStage: "invite",
@@ -29,101 +54,91 @@ export const DEFAULT_CONTENT: ContentMap = {
   },
   contact: {
     email: "hello@agentkip.ai",
-    blurb:
-      "Questions, bug reports, or beta invite requests — send a note and Brandon will get back to you.",
+    blurb: "Questions, bugs, or beta requests? Send Brandon a note.",
     socials: [],
   },
   faq: [
     {
       question: "Do you see my data?",
       answer:
-        "No. Your conversations, memory, and files live on your own box — the AgentKip project never has access to them. The website itself only stores what it needs to run: your sign-in info (via Clerk), waitlist emails, and any message you send through the contact form.",
+        "Kip saves your chats, memory, and files on the computer running Noggin. AgentKip does not receive them. An online AI company will still process anything you send to its model. This website stores sign-in details, waitlist emails, and messages you choose to send us.",
     },
     {
       question: "What does it cost?",
       answer:
-        "The app and the beta are free. You pay your own model-provider account directly for whatever you use — Kip doesn't mark that up or route it through a shared backend. Casual use tends to be cheap; heavier coding or research runs cost more, same as using that provider anywhere else.",
+        "The beta is free. You pay the AI company you choose for what you use, with no AgentKip markup. Longer or harder tasks usually cost more.",
     },
     {
       question: "Why do I need my own API key?",
       answer:
-        "Your box talks straight to the model provider you choose, using a key only you hold. That's what keeps your prompts, your data, and your bill entirely yours — nothing passes through a Kip-run relay.",
+        "The computer running Noggin uses your key to reach the AI company you choose. That keeps the account and bill in your name. Never share a key in chat or email.",
     },
     {
       question: "What do I need to run it?",
       answer:
-        "A Mac, a Linux box, a Windows machine with Docker, or a small VPS — basically anything that can stay on and be reachable from your phone (directly on your network, or over Tailscale). It's mostly waiting on API calls, so it doesn't need to be powerful.",
+        "You need an iPhone and a computer that can stay on. A Mac, Linux computer, Windows computer with Docker, or small hosted computer can work. The setup guide walks through the choices.",
     },
     {
       question: "When is TestFlight coming?",
       answer:
-        "It's being set up now. Until it's live, the beta is invite-only — ask Brandon for a spot, or join the waitlist and you'll get a link as soon as one opens up.",
+        "The beta is invite-only right now. Join the waitlist and we’ll email you when a place opens.",
     },
     {
       question: "Which iPhones and iOS versions does it support?",
       answer:
-        "Kip is built for iOS 27, with a compatibility build targeting iOS 26 so more devices can join the beta in the meantime.",
+        "Kip is built for iOS 27. A smaller Kip26 build supports iOS 26 while the beta grows.",
     },
     {
       question: "Is it open source?",
       answer:
-        "It descends from the open Hermes agent framework. Exactly how the app itself will be distributed and licensed is still being worked out — more details once that's settled.",
+        "Kip grew from the open Hermes agent framework. The license and release plan for the app are still being decided.",
     },
     {
       question: "What models can I use?",
       answer:
-        "Whatever your box exposes. Go through OpenRouter with a single key for access to a lot of models at once, connect directly to a provider like OpenAI or Anthropic, or run local models through Ollama.",
+        "You choose from the models connected to your Noggin. That can include OpenAI, Anthropic, OpenRouter, or local models through Ollama.",
     },
     {
       question: "Can it code?",
       answer:
-        "Yes — there's a dedicated Code model lane, and durable runs mean a long task keeps going even if you back out of the app or lose connection for a moment. Delegating out to Claude Code or Codex from your phone is on the roadmap, but it isn't shipped yet.",
+        "Yes. Kip can help explain code, find problems, and work through fixes. Sending work to Claude Code or Codex from your phone is planned, but not available yet.",
     },
     {
       question: "How do I report a bug or a security issue?",
       answer:
-        "Head to the Contact page — every message goes straight to Brandon, no ticket queue in between.",
+        "Use the Contact page or email hello@agentkip.ai. Your message goes to Brandon.",
     },
   ],
   roadmap: [
     {
       title: "TestFlight public beta",
       description:
-        "Getting the public TestFlight link ready so anyone can join the beta without waiting on an invite.",
+        "Open the iPhone beta to more people.",
       status: "building",
     },
     {
-      title: "Per-device expiring pairing tokens",
-      description:
-        "Replacing today's long-lived pairing key with tokens that are issued per device and expire on their own.",
-      status: "building",
-    },
-    {
-      title: "Claude Code & Codex delegation from your phone",
-      description:
-        "Kick off a Claude Code or Codex run from inside Kip and keep tabs on it, without opening a laptop.",
+      title: "Coding tools from iPhone",
+      description: "Start Claude Code or Codex work and follow it from Kip.",
       status: "planned",
     },
     {
       title: "Desktop app",
-      description: "A native desktop companion that talks to the same server you already run.",
+      description: "Use Kip from a computer as well as your iPhone.",
       status: "planned",
     },
     {
       title: "Managed hosting",
-      description:
-        "A hosted option for people who'd rather not run their own server — bring your provider key, skip the setup.",
+      description: "Use Kip without keeping your own computer online.",
       status: "planned",
     },
     {
       title: "Family accounts",
-      description:
-        "Exploring what it looks like for a few people to share one server, each with their own memory and conversations.",
+      description: "Let a few people share one Noggin with separate chats and memory.",
       status: "exploring",
     },
     {
       title: "Memory browser UI",
-      description: "A visual way to see, search, and edit what Kip remembers about you.",
+      description: "See, search, change, or remove what Kip remembers.",
       status: "exploring",
     },
   ],
@@ -137,57 +152,49 @@ export const DEFAULT_CONTENT: ContentMap = {
   useCases: [
     {
       title: "Capture a thought on the go",
-      description:
-        "Tap into dictation or push-to-talk and get a thought out of your head and into Kip before you lose it — no typing required.",
+      description: "Say an idea before you lose it, without stopping to type.",
       tags: ["Voice"],
       result: null,
     },
     {
       title: "Start the day with a briefing",
-      description:
-        "A morning notification summarizes what's on deck, put together on-device before you've even opened the app.",
+      description: "See a short morning summary before you open the app.",
       tags: ["Widgets", "On-device AI"],
       result: null,
     },
     {
       title: "Scan a receipt, skip the typing",
-      description:
-        "Point the camera at a receipt and Kip pulls out the line items and total instead of you retyping them.",
+      description: "Point your camera at a receipt and let Kip pull out the items and total.",
       tags: ["Vision"],
       result: null,
     },
     {
-      title: "Kick off a long run, watch it in the Dynamic Island",
-      description:
-        "Start a coding or research task, lock your phone, and watch it keep working from the Dynamic Island — durable runs survive backgrounding.",
+      title: "Keep a long task moving",
+      description: "Lock your phone and follow the task from the Dynamic Island.",
       tags: ["Durable runs"],
       result: null,
     },
     {
       title: "Draft messages on a plane",
-      description:
-        "No signal, no problem — on-device intelligence drafts replies and notes offline, and Kip picks the thread back up once you're online.",
+      description: "Draft a short reply on your iPhone when you have no signal.",
       tags: ["On-device AI"],
       result: null,
     },
     {
       title: "Run a focus sprint",
-      description:
-        "Start a timed Focus sprint and track it from a Live Activity on your lock screen — no need to keep the app open.",
+      description: "Start a timer and follow it from your Lock Screen.",
       tags: ["Focus"],
       result: null,
     },
     {
       title: "Ask Kip without opening the app",
-      description:
-        "Add a Control Center button and fire off a quick question or command straight from the control panel.",
+      description: "Use a Control Center button to start a quick request.",
       tags: ["Widgets", "Siri"],
       result: null,
     },
     {
       title: "Share a page or screenshot into Kip",
-      description:
-        "Send a webpage or screenshot from any app straight into Kip using the share sheet, and pick up the conversation from there.",
+      description: "Send a page or screenshot to Kip from another app.",
       tags: ["Share"],
       result: null,
     },

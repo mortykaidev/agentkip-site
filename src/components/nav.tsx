@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 import { AgentKipWordmark } from "@/components/brand";
 
 const LINKS = [
-  { href: "/#product", label: "Product" },
-  { href: "/how-it-works", label: "How it works" },
+  { href: "/#what-kip-can-do", label: "What Kip can do" },
+  { href: "/how-it-works", label: "How Kip works" },
   { href: "/security", label: "Security" },
   { href: "/docs/deploy", label: "Docs" },
 ] as const;

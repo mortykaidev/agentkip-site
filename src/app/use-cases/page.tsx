@@ -5,9 +5,8 @@ import { Reveal } from "@/components/reveal";
 import { getContent } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "Use cases",
-  description:
-    "Real workflows AgentKip supports today — voice capture, briefings, OCR, durable long-running tasks from your phone — with results posted from real runs, not cherry-picked demos.",
+  title: "Ways Kip can help",
+  description: "See everyday ways Kip can help you plan, write, scan, focus, and keep going.",
 };
 
 /* Pastel rotation for tag pills — deterministic per tag position. */
@@ -21,9 +20,9 @@ export default async function UseCasesPage() {
       <Section>
         <Reveal>
           <SectionHeader
-            kicker="Use cases"
-            title="Real workflows, running today"
-            lead="Everything below is something the app supports right now — no roadmap items mixed in. Where a result slot is empty, that’s deliberate: we’ll post output from real runs as we capture them, not cherry-picked fabrications."
+            kicker="Everyday ideas"
+            title="Ways Kip can help"
+            lead="Start with one of these, or ask in your own words."
           />
         </Reveal>
       </Section>
@@ -50,13 +49,13 @@ export default async function UseCasesPage() {
                   {useCase.result === null ? (
                     <div className="flex items-center gap-2.5 rounded-[10px] border border-dashed border-hairline px-4 py-3">
                       <StatusGlyph state="sleeping" size={22} className="shrink-0" />
-                      <p className="text-[13px] text-ink-muted">Real run results coming soon</p>
+                      <p className="text-[13px] text-ink-muted">Example result coming soon</p>
                     </div>
                   ) : (
                     <div className="rounded-[10px] border border-hairline bg-elevated p-4">
                       <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-muted">
                         <StatusGlyph state="done" size={16} className="shrink-0" />
-                        From a real run
+                        Example result
                       </p>
                       <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-[13px] leading-relaxed text-ink-secondary">
                         {useCase.result}

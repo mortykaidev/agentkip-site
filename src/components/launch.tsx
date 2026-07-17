@@ -209,17 +209,17 @@ function FlowArrow() {
 const ARCHITECTURE_ITEMS = [
   {
     title: "Kip on iPhone",
-    body: "A native client in your pocket.",
+    body: "Ask and follow along.",
     icon: <PhoneIcon />,
   },
   {
     title: "Your connection",
-    body: "Uses the path configured for your setup.",
+    body: "Links Kip and Noggin.",
     icon: <ConnectionIcon />,
   },
   {
     title: "Your Noggin",
-    body: "A small computer that lives at your house.",
+    body: "Runs on your computer.",
     icon: <ServerIcon />,
   },
 ] as const;
@@ -271,7 +271,7 @@ export function GetKipStrip() {
           Open <Link href="/get">agentkip.ai/get</Link> on your iPhone.
         </p>
         <Link href="/docs/deploy" className="launch-text-link">
-          Advanced self-hosting <ArrowIcon />
+          Open the setup guide <ArrowIcon />
         </Link>
       </div>
       <Link href="/get" className="launch-mobile-get">
