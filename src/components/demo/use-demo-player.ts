@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import type { DemoExchange } from "./script";
+import type { DemoCard, DemoExchange } from "./script";
 
 /* Drives the scripted chat playback:
    user bubble → thinking → typewriter stream → done glyph → idle.
@@ -14,6 +14,7 @@ export type DemoMessage = {
   id: number;
   role: "user" | "assistant";
   text: string;
+  card?: DemoCard;
 };
 
 const THINKING_MS = 1400;
@@ -72,11 +73,14 @@ export function useDemoPlayer(isReducedMotion: boolean) {
     timeoutsRef.current.add(id);
   }, []);
 
-  const appendMessage = useCallback((role: DemoMessage["role"], text: string) => {
-    const id = nextIdRef.current;
-    nextIdRef.current += 1;
-    setMessages((previous) => [...previous, { id, role, text }]);
-  }, []);
+  const appendMessage = useCallback(
+    (role: DemoMessage["role"], text: string, card?: DemoCard) => {
+      const id = nextIdRef.current;
+      nextIdRef.current += 1;
+      setMessages((previous) => [...previous, { id, role, text, card }]);
+    },
+    [],
+  );
 
   const play = useCallback(
     (exchange: DemoExchange) => {
@@ -85,7 +89,7 @@ export function useDemoPlayer(isReducedMotion: boolean) {
       appendMessage("user", exchange.userText);
 
       if (isReducedMotion) {
-        appendMessage("assistant", exchange.reply);
+        appendMessage("assistant", exchange.reply, exchange.card);
         return;
       }
 
@@ -103,7 +107,7 @@ export function useDemoPlayer(isReducedMotion: boolean) {
               intervalRef.current = null;
             }
             setStreamedText("");
-            appendMessage("assistant", exchange.reply);
+            appendMessage("assistant", exchange.reply, exchange.card);
             setPhase("settling");
             schedule(() => setPhase("idle"), SETTLE_MS);
           } else {

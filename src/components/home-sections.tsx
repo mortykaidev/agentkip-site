@@ -50,29 +50,34 @@ export function ScreensStrip() {
 
 const COMPARE_ROWS = [
   {
-    label: "Where your conversations live",
-    kip: "On a little computer you own",
-    others: "On the company's computers",
+    label: "Your conversations",
+    kip: "Stay in your home",
+    others: "On their servers",
+    icon: <HouseIcon />,
   },
   {
-    label: "Which AI answers you",
-    kip: "Your pick — mix and match",
-    others: "Only theirs",
+    label: "Choice of AI",
+    kip: "Any provider",
+    others: "Just theirs",
+    icon: <SparkleIcon />,
   },
   {
     label: "Cost during beta",
-    kip: "App is free; you pay your AI provider",
-    others: "Usually a free tier or subscription",
+    kip: "Free + your API keys",
+    others: "Free tier or subscription",
+    icon: <TagIcon />,
   },
   {
-    label: "Put it offline",
-    kip: "Unplug the box you own",
-    others: "Use the app’s account controls",
+    label: "Off switch",
+    kip: "Unplug the box",
+    others: "Account settings",
+    icon: <PowerIcon />,
   },
   {
     label: "Setup",
-    kip: "Some — that's the tradeoff",
-    others: "None — download and go",
+    kip: "Some — the tradeoff",
+    others: "None",
+    icon: <WrenchIcon />,
   },
 ] as const;
 
@@ -85,14 +90,23 @@ export function CompareStrip() {
         <thead>
           <tr>
             <th scope="col"></th>
-            <th scope="col">Kip</th>
-            <th scope="col">Most AI apps</th>
+            <th scope="col">
+              <span className="home-compare-pill home-compare-pill-kip">Kip</span>
+            </th>
+            <th scope="col">
+              <span className="home-compare-pill">Most AI apps</span>
+            </th>
           </tr>
         </thead>
         <tbody>
           {COMPARE_ROWS.map((row) => (
             <tr key={row.label}>
-              <th scope="row">{row.label}</th>
+              <th scope="row">
+                <span className="home-compare-row-icon" aria-hidden="true">
+                  {row.icon}
+                </span>
+                {row.label}
+              </th>
               <td>{row.kip}</td>
               <td>{row.others}</td>
             </tr>
@@ -102,7 +116,12 @@ export function CompareStrip() {
       <div className="home-compare-mobile">
         {COMPARE_ROWS.map((row) => (
           <article key={row.label} className="home-compare-card">
-            <h3>{row.label}</h3>
+            <h3>
+              <span className="home-compare-row-icon" aria-hidden="true">
+                {row.icon}
+              </span>
+              {row.label}
+            </h3>
             <dl>
               <div>
                 <dt>Kip</dt>
@@ -120,5 +139,48 @@ export function CompareStrip() {
         See the full comparison <ArrowIcon />
       </Link>
     </section>
+  );
+}
+
+function HouseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 11.5 12 4l8 7.5" />
+      <path d="M6 10v9.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10" />
+    </svg>
+  );
+}
+
+function SparkleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3c0 4.5-2 6.5-6.5 6.5 4.5 0 6.5 2 6.5 6.5 0-4.5 2-6.5 6.5-6.5-4.5 0-6.5-2-6.5-6.5Z" />
+    </svg>
+  );
+}
+
+function TagIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M20 12.5 12.5 20 4 11.5V4h7.5L20 12.5Z" />
+      <path d="M8 8h.01" />
+    </svg>
+  );
+}
+
+function PowerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3v9" />
+      <path d="M7 6.5a7 7 0 1 0 10 0" />
+    </svg>
+  );
+}
+
+function WrenchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M14.5 3.5a4.5 4.5 0 0 0-5.9 5.9L3 15l2 2 5.6-5.6a4.5 4.5 0 0 0 5.9-5.9l-2.6 2.6-2-2 2.6-2.6Z" />
+    </svg>
   );
 }

@@ -12,13 +12,14 @@ describe("public site", () => {
     expect(markup).toContain("On your iPhone.");
     expect(markup).toContain("In your home.");
     expect(markup).toContain("Cost during beta");
-    expect(markup).toContain("App is free; you pay your AI provider");
-    expect(markup).toContain("Usually a free tier or subscription");
-    expect(markup).toContain("Put it offline");
-    expect(markup).toContain("Unplug the box you own");
-    expect(markup).toContain("Use the app’s account controls");
+    expect(markup).toContain("Free + your API keys");
+    expect(markup).toContain("Free tier or subscription");
+    expect(markup).toContain("Off switch");
+    expect(markup).toContain("Unplug the box");
+    expect(markup).toContain("Account settings");
     expect(markup).not.toContain("Monthly subscription");
     expect(markup).not.toContain("Want it all gone?");
+    expect(markup).not.toContain("On a little computer you own");
   });
 
   it("masks each legacy screenshot callout without changing the product images", () => {

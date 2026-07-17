@@ -9,9 +9,96 @@ import {
   DEMO_DISCLAIMER,
   DEMO_LANES,
   DEMO_PROMPTS,
+  type DemoCard,
+  type DemoCardRow,
   type DemoLaneId,
 } from "./script";
 import { useDemoPlayer, usePrefersReducedMotion } from "./use-demo-player";
+
+/* Tiny inline icon set for card rows — 24-unit viewBox, stroke-only, matches
+   the composer glyphs' weight. Kept local since it's only used here. */
+function CardRowIcon({ icon }: { icon: DemoCardRow["icon"] }) {
+  if (icon === "clock") {
+    return (
+      <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden="true">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.4" />
+        <path
+          d="M12 7v5l3.5 2"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  if (icon === "check") {
+    return (
+      <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden="true">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.4" />
+        <path
+          d="M8 12.5l2.5 2.5L16 9.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden="true">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <path
+        d="M12 7.5v9M9.3 9.7c0-1.1 1.1-1.7 2.7-1.7s2.7.6 2.7 1.5-1.1 1.3-2.7 1.5-2.7.6-2.7 1.5 1.1 1.7 2.7 1.7 2.7-.6 2.7-1.7"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/* Rich reply card — renders under an assistant message's intro line when the
+   scripted exchange has structured content (schedule, checklist, summary).
+   Mounts hidden and fades/slides in on the next frame; skipped entirely under
+   prefers-reduced-motion so it just appears with the message. */
+function DemoCardView({ card, isReducedMotion }: { card: DemoCard; isReducedMotion: boolean }) {
+  const [isVisible, setIsVisible] = useState(isReducedMotion);
+
+  useEffect(() => {
+    if (isReducedMotion) return;
+    const frame = requestAnimationFrame(() => setIsVisible(true));
+    return () => cancelAnimationFrame(frame);
+  }, [isReducedMotion]);
+
+  return (
+    <div
+      className={`mt-2 rounded-[16px] border border-[#403f3b] bg-[#30302e] p-3.5 transition-all duration-300 ease-out ${
+        isVisible ? "translate-y-0 opacity-100" : "translate-y-1.5 opacity-0"
+      }`}
+    >
+      <p className="text-[12px] font-semibold text-[#7fd8b1]">{card.title}</p>
+      <div className="mt-2 space-y-1.5">
+        {card.rows.map((row) => (
+          <div key={row.text} className="flex items-start gap-2 text-[13px] leading-snug">
+            <span className="mt-0.5 shrink-0 text-[#908e84]">
+              <CardRowIcon icon={row.icon} />
+            </span>
+            <span>{row.text}</span>
+          </div>
+        ))}
+      </div>
+      {card.footer ? (
+        <p className="mt-2.5 border-t border-[#403f3b] pt-2 text-[11px] text-[#908e84]">{card.footer}</p>
+      ) : null}
+    </div>
+  );
+}
 
 /* The homepage "wow" piece: a simulated AgentKip session inside an iPhone-style
    frame. Plays a scripted run when scrolled into view; visitors can tap canned
@@ -80,16 +167,16 @@ export function PhoneDemo() {
   };
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-[360px]">
-      {/* Bezel */}
+    <div className="mx-auto w-full min-w-0 max-w-[315px]">
+      {/* Bezel — true iPhone screen ratio (1206:2622) */}
       <div
         ref={frameRef}
-        className="relative h-[640px] rounded-[44px] border border-hairline bg-[#141412] p-[10px] shadow-[0_32px_80px_-32px_rgba(0,0,0,0.55)] sm:h-[680px]"
+        className="relative aspect-[1206/2622] rounded-[44px] border border-hairline bg-[#141412] p-[10px] shadow-[0_32px_80px_-32px_rgba(0,0,0,0.55)]"
       >
         {/* Side buttons */}
-        <span className="absolute -left-[2px] top-[130px] h-[28px] w-[3px] rounded-full bg-[#141412]" aria-hidden="true" />
-        <span className="absolute -left-[2px] top-[172px] h-[48px] w-[3px] rounded-full bg-[#141412]" aria-hidden="true" />
-        <span className="absolute -right-[2px] top-[196px] h-[64px] w-[3px] rounded-full bg-[#141412]" aria-hidden="true" />
+        <span className="absolute -left-[2px] top-[139px] h-[28px] w-[3px] rounded-full bg-[#141412]" aria-hidden="true" />
+        <span className="absolute -left-[2px] top-[184px] h-[48px] w-[3px] rounded-full bg-[#141412]" aria-hidden="true" />
+        <span className="absolute -right-[2px] top-[210px] h-[64px] w-[3px] rounded-full bg-[#141412]" aria-hidden="true" />
 
         {/* Screen — always Kip Charcoal */}
         <div className="flex h-full flex-col overflow-hidden rounded-[34px] bg-[#262624] text-[#f0eee6]">
@@ -105,15 +192,13 @@ export function PhoneDemo() {
             </span>
           </div>
 
-          {/* Header */}
-          <div className="mt-4 flex items-center gap-2.5 px-5">
-            <KipIcon size={30} className="rounded-[9px]" />
-            <div className="min-w-0">
+          {/* Header — Kip mark + title centered on the same axis as the Dynamic Island */}
+          <div className="mt-4 flex flex-col items-center gap-0.5 px-5">
+            <div className="flex items-center gap-1.5">
+              <KipIcon size={20} className="rounded-[6px]" />
               <p className="text-[15px] font-semibold leading-tight">Kip</p>
-              <p className="truncate text-[11px] leading-tight text-[#908e84]">
-                {activeLane.label} lane · {activeLane.caption} · models from your own box
-              </p>
             </div>
+            <p className="text-[11px] leading-tight text-[#908e84]">{activeLane.label} lane</p>
           </div>
 
           {/* Model-lane switcher */}
@@ -125,7 +210,7 @@ export function PhoneDemo() {
                 onClick={() => setLaneId(lane.id)}
                 className={`kip-press shrink-0 rounded-full px-3 py-1 text-[12px] font-semibold transition-colors ${
                   lane.id === laneId
-                    ? "bg-[#7fd8b1] text-[#14211b]"
+                    ? "border border-[#7fd8b1] bg-[#7fd8b1]/15 text-[#7fd8b1]"
                     : "border border-[#403f3b] text-[#c5c2b6]"
                 }`}
                 aria-pressed={lane.id === laneId}
@@ -158,12 +243,14 @@ export function PhoneDemo() {
                 </div>
               ) : (
                 /* Assistant replies are bubble-less plain text — the app's style */
-                <p
-                  key={message.id}
-                  className="whitespace-pre-line text-[14px] leading-relaxed text-[#f0eee6]"
-                >
-                  {message.text}
-                </p>
+                <div key={message.id}>
+                  <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#f0eee6]">
+                    {message.text}
+                  </p>
+                  {message.card ? (
+                    <DemoCardView card={message.card} isReducedMotion={isReducedMotion} />
+                  ) : null}
+                </div>
               ),
             )}
 
@@ -204,34 +291,76 @@ export function PhoneDemo() {
             ))}
           </div>
 
-          {/* Composer with Siri-glow focus treatment */}
+          {/* Composer with Siri-glow focus treatment — two-row app layout */}
           <form onSubmit={handleComposerSubmit} className="px-4 pb-5 pt-1">
-            <div className="siri-glow flex items-center gap-2 rounded-full border border-[#403f3b] bg-[#30302e] py-2 pl-4 pr-2">
+            <div className="siri-glow rounded-[26px] border border-[#403f3b] bg-[#30302e] px-4 py-3">
               <input
                 type="text"
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
-                placeholder="Ask Kip anything…"
+                placeholder="Message Kip"
                 aria-label="Try the demo composer"
-                className="min-w-0 flex-1 bg-transparent text-[14px] text-[#f0eee6] outline-none placeholder:text-[#908e84]"
+                className="w-full bg-transparent text-[14px] text-[#f0eee6] outline-none placeholder:text-[#908e84]"
               />
-              <button
-                type="submit"
-                disabled={isBusy || draft.trim().length === 0}
-                aria-label="Send"
-                className="kip-press flex size-8 shrink-0 items-center justify-center rounded-full bg-[#7fd8b1] text-[#14211b] transition-opacity disabled:opacity-40"
-              >
-                <svg viewBox="0 0 16 16" width={14} height={14} aria-hidden="true">
-                  <path
-                    d="M 8 13 L 8 3 M 4 7 L 8 3 L 12 7"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
+              <div className="mt-2.5 flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <span
+                    className="flex size-6 shrink-0 items-center justify-center rounded-full border border-[#403f3b] text-[#c5c2b6]"
+                    aria-hidden="true"
+                  >
+                    <svg viewBox="0 0 24 24" width={13} height={13} aria-hidden="true">
+                      <path
+                        d="M12 5v14M5 12h14"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </span>
+                  <span className="shrink-0 rounded-full bg-[#403f3b] px-2.5 py-1 text-[11px] font-semibold text-[#f0eee6]">
+                    Kip
+                  </span>
+                  <span className="truncate rounded-full border border-[#403f3b] px-2.5 py-1 text-[11px] font-medium text-[#c5c2b6]">
+                    {activeLane.label}
+                  </span>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width={16}
+                    height={16}
+                    aria-hidden="true"
+                    className="text-[#908e84]"
+                  >
+                    <path
+                      d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0M12 19v2"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <button
+                    type="submit"
+                    disabled={isBusy || draft.trim().length === 0}
+                    aria-label="Send"
+                    className="kip-press flex size-8 shrink-0 items-center justify-center rounded-full bg-[#7fd8b1] text-[#14211b] transition-opacity disabled:opacity-40"
+                  >
+                    <svg viewBox="0 0 16 16" width={14} height={14} aria-hidden="true">
+                      <path
+                        d="M 8 13 L 8 3 M 4 7 L 8 3 L 12 7"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </form>
         </div>
