@@ -113,21 +113,21 @@ const FLOW_STEPS = [
     number: "1",
     tone: "lilac",
     title: "Ask",
-    body: "Tell Kip what you need.",
+    body: "Say it.",
     preview: <ComposerPreview />,
   },
   {
     number: "2",
     tone: "mint",
     title: "Follow",
-    body: "See each step as it happens.",
+    body: "Watch it work.",
     preview: <ReviewPreview />,
   },
   {
     number: "3",
     tone: "butter",
     title: "Done",
-    body: "The result is saved for you.",
+    body: "Saved.",
     preview: <DonePreview />,
   },
 ] as const;
@@ -142,12 +142,14 @@ export function RunFlow() {
         {FLOW_STEPS.map((step, index) => (
           <div key={step.title} className="contents">
             <article className="launch-flow-step">
-              <span className={`launch-step-number launch-tone-${step.tone}`}>{step.number}</span>
-              <div className="launch-step-copy">
-                <h3>{step.title}</h3>
-                <p>{step.body}</p>
-              </div>
               {step.preview}
+              <div className="launch-step-row">
+                <span className={`launch-step-number launch-tone-${step.tone}`}>{step.number}</span>
+                <div className="launch-step-copy">
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
+                </div>
+              </div>
             </article>
             {index < FLOW_STEPS.length - 1 ? <FlowArrow /> : null}
           </div>
@@ -174,7 +176,10 @@ function ComposerPreview() {
 function ReviewPreview() {
   return (
     <div className="launch-mini-panel launch-review" aria-hidden="true">
-      <span>Action details are shown in the run.</span>
+      <div className="launch-review-steps">
+        <span className="launch-review-skeleton-line" />
+        <span className="launch-review-skeleton-line" />
+      </div>
       <span className="launch-review-state">Review</span>
     </div>
   );
@@ -183,11 +188,11 @@ function ReviewPreview() {
 function DonePreview() {
   return (
     <div className="launch-mini-panel launch-done" aria-hidden="true">
-      <span>Result saved with the run.</span>
       <svg viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="9" />
         <path d="m8 12 2.5 2.5L16 9" />
       </svg>
+      <span className="launch-done-label">Saved</span>
     </div>
   );
 }

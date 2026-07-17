@@ -486,7 +486,7 @@ body {
   width: 306px;
   aspect-ratio: 1206 / 2622;
   overflow: hidden;
-  transform: translateX(-44%);
+  transform: translateX(-50%);
   border: 7px solid #0d0e0d;
   border-radius: 44px;
   background: #0d0e0d;
@@ -541,9 +541,9 @@ body {
 .launch-orbits {
   position: absolute;
   top: 16px;
-  right: -26px;
+  right: -48px;
   bottom: -12px;
-  left: -70px;
+  left: -48px;
 }
 
 .launch-band {
@@ -560,20 +560,26 @@ body {
 
 .launch-flow-step {
   min-width: 0;
-  display: grid;
-  grid-template-columns: 42px minmax(90px, 0.72fr) minmax(128px, 1fr);
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.launch-step-row {
+  display: flex;
   align-items: center;
+  gap: 10px;
 }
 
 .launch-step-number {
-  width: 38px;
-  height: 38px;
+  width: 28px;
+  height: 28px;
+  flex: none;
   display: grid;
   place-items: center;
   border: 1px solid currentColor;
   border-radius: 50%;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 750;
 }
 
@@ -598,20 +604,19 @@ body {
 }
 
 .launch-mini-panel {
-  grid-column: 3;
-  min-height: 58px;
-  margin-top: 0;
+  width: 100%;
+  min-height: 108px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--surface);
   color: var(--ink-secondary);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .launch-composer {
   display: grid;
-  gap: 9px;
-  padding: 10px;
+  gap: 12px;
+  padding: 14px;
 }
 
 .launch-composer > div {
@@ -642,27 +647,62 @@ body {
 .launch-done {
   display: flex;
   align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  height: 100%;
+}
+
+.launch-review {
   justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
+}
+
+.launch-review-steps {
+  display: grid;
+  flex: 1;
+  gap: 7px;
+}
+
+.launch-review-skeleton-line {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--elevated);
+}
+
+.launch-review-skeleton-line:first-child {
+  width: 100%;
+}
+
+.launch-review-skeleton-line:last-child {
+  width: 68%;
 }
 
 .launch-review-state {
+  flex: none;
   border: 1px solid var(--mint);
   border-radius: 999px;
   color: var(--mint);
   padding: 4px 8px;
 }
 
+.launch-done {
+  justify-content: center;
+}
+
 .launch-done svg {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   flex: none;
   fill: none;
   stroke: var(--accent);
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.5;
+}
+
+.launch-done-label {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 650;
 }
 
 .launch-flow-arrow {
@@ -954,14 +994,6 @@ body {
     gap: 24px;
   }
 
-  .launch-flow-step {
-    grid-template-columns: 42px minmax(0, 1fr);
-  }
-
-  .launch-mini-panel {
-    grid-column: 2;
-  }
-
   .launch-flow-arrow,
   .launch-architecture-arrow {
     width: 32px;
@@ -1053,10 +1085,6 @@ body {
     gap: 30px;
   }
 
-  .launch-mini-panel {
-    margin-top: 13px;
-  }
-
   .launch-get-strip {
     grid-template-columns: 1fr;
     padding: 32px 22px;
@@ -1087,6 +1115,17 @@ body {
 
 /* ---- Home: phone demo album, comparison table, inline phone modifier ---- */
 
+.home-demo h2,
+.home-screens h2,
+.home-compare-wrap h2 {
+  margin: 0 0 28px;
+  color: var(--ink);
+  font-size: clamp(26px, 3.2vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+}
+
 .launch-phone-inline {
   position: relative;
   top: auto;
@@ -1106,6 +1145,7 @@ body {
 
 .home-screens {
   width: 100%;
+  padding-inline: 56px;
 }
 
 .home-screens-swipe-cue {
@@ -1131,6 +1171,7 @@ body {
 @media (min-width: 821px) {
   .home-screens-track {
     justify-content: center;
+    gap: clamp(32px, 5vw, 64px);
   }
 }
 
@@ -1143,6 +1184,27 @@ body {
 .home-screens-item:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .launch-phone-inline {
+    transition:
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.35s ease;
+  }
+
+  .home-screens-item:hover .launch-phone-inline {
+    transform: translateY(-10px) scale(1.04);
+    box-shadow: 0 30px 56px rgb(0 0 0 / 35%);
+  }
+
+  .home-screens-item:first-child:hover .launch-phone-inline {
+    transform: translateY(-10px) scale(1.04) rotate(-1.5deg);
+  }
+
+  .home-screens-item:last-child:hover .launch-phone-inline {
+    transform: translateY(-10px) scale(1.04) rotate(1.5deg);
+  }
 }
 
 .home-screens-caption {
@@ -1166,27 +1228,74 @@ body {
 .home-compare th,
 .home-compare td {
   border-bottom: 1px solid var(--border);
-  padding: 12px 14px;
+  padding: 20px 16px;
   overflow-wrap: anywhere;
-  text-align: left;
-  font-size: 14px;
+  text-align: center;
+  font-size: 15px;
   line-height: 1.5;
 }
 
-.home-compare th {
-  color: var(--ink);
+.home-compare thead th {
+  padding-top: 0;
+  padding-bottom: 16px;
+  border-bottom: none;
+}
+
+.home-compare-pill {
+  display: inline-flex;
+  border-radius: 999px;
+  background: var(--elevated);
+  padding: 6px 16px;
+  color: var(--ink-secondary);
+  font-size: 13px;
   font-weight: 650;
+}
+
+.home-compare-pill-kip {
+  background: color-mix(in srgb, var(--mint), transparent 80%);
+  color: var(--ink);
+}
+
+.home-compare tbody th {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 650;
+  text-align: left;
+}
+
+.home-compare-row-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--accent);
+}
+
+.home-compare-row-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.4;
 }
 
 .home-compare td {
   color: var(--ink-secondary);
 }
 
-/* Kip's own column (middle, per JSX order: empty | Kip | Most AI apps) gets a faint sky tint to draw the eye */
-.home-compare th:nth-child(2),
+/* Kip's own column (per JSX order: row label | Kip | Most AI apps) gets a faint mint tint to draw the eye */
 .home-compare td:nth-child(2) {
-  background: color-mix(in srgb, var(--accent), transparent 92%);
+  background: color-mix(in srgb, var(--mint), transparent 93%);
   color: var(--ink);
+  font-weight: 600;
 }
 
 .home-compare-link {
@@ -1212,6 +1321,10 @@ body {
 @media (max-width: 600px) {
   .home-demo {
     padding: 44px 22px 56px;
+  }
+
+  .home-screens {
+    padding-inline: 22px;
   }
 
   .home-compare-wrap {
@@ -1243,6 +1356,9 @@ body {
   }
 
   .home-compare-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin: 0 0 14px;
     color: var(--ink);
     font-size: 15px;
