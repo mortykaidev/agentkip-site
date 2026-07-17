@@ -14,7 +14,7 @@ export function WaitlistForm({ className = "" }: { className?: string }) {
       <div className={`kip-card flex items-center gap-3 p-4 ${className}`} role="status">
         <span className="size-2 shrink-0 rounded-full bg-accent" aria-hidden="true" />
         <p className="text-sm font-medium text-ink">
-          You&apos;re on the list. We&apos;ll email you when a beta spot opens up.
+          You&apos;re on the list. We&apos;ll email you when a beta place opens.
         </p>
       </div>
     );

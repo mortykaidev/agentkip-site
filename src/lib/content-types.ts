@@ -9,6 +9,11 @@ export type HeroContent = {
   secondaryCtaLabel: string;
 };
 
+export type HomeBenefit = {
+  title: string;
+  description: string;
+};
+
 export type GetPageContent = {
   /** A stage can only be promoted when its matching verified destination is present. */
   betaStage: "invite" | "testflight" | "appstore";
@@ -63,6 +68,7 @@ export type GalleryItem = {
 
 export type ContentMap = {
   hero: HeroContent;
+  homeBenefits: HomeBenefit[];
   getPage: GetPageContent;
   siteStatus: SiteStatus;
   contact: ContactContent;

@@ -6,8 +6,8 @@ import { isClerkConfigured } from "@/lib/auth";
 import { getContent } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "Account",
-  description: "Your AgentKip account and beta status.",
+  title: "Your Kip account",
+  description: "See your AgentKip profile and beta status.",
 };
 
 export const dynamic = "force-dynamic";
@@ -24,10 +24,9 @@ export default async function AccountPage() {
     return (
       <Section className="py-24">
         <KipCard className="mx-auto max-w-md p-8 text-center">
-          <h1 className="text-xl font-semibold text-ink">Accounts aren&apos;t set up here yet</h1>
+          <h1 className="text-xl font-semibold text-ink">Accounts are unavailable</h1>
           <p className="mt-3 text-sm leading-relaxed text-ink-secondary">
-            This environment has no Clerk keys configured, so there&apos;s nothing to sign in
-            to. Add NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY to enable accounts.
+            Sign-in has not been turned on for this version of the site.
           </p>
         </KipCard>
       </Section>
@@ -76,11 +75,10 @@ export default async function AccountPage() {
               <Pill tone="mint">Active</Pill>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-ink-secondary">
-              Everything is free while Kip is in beta. You bring your own provider API keys, so
-              your only costs are the ones you already pay your model provider.
+              Kip is free during the beta. You pay the AI company you choose for what you use.
             </p>
             <p className="mt-2 text-xs text-ink-muted">
-              Billing isn&apos;t wired up yet — this card is a placeholder for future plans.
+              Paid AgentKip plans are not available yet.
             </p>
           </KipCard>
 
@@ -103,7 +101,7 @@ export default async function AccountPage() {
               Get Kip
             </KipButton>
             <KipButton href="/faq" variant="secondary" size="sm">
-              Read the FAQ
+              Quick answers
             </KipButton>
           </div>
         </div>

@@ -3,9 +3,8 @@ import { OrbitMark, StatusGlyph, type GlyphState } from "@/components/brand";
 import { Section, SectionHeader, KipCard, Kicker } from "@/components/ui";
 
 export const metadata: Metadata = {
-  title: "Kip's Corner",
-  description:
-    "The story of the mark, the orbit motif, the status glyphs, and the palette behind AgentKip.",
+  title: "Meet Kip",
+  description: "Meet the little planet, colors, and status symbols behind AgentKip.",
 };
 
 const GLYPH_STATES: { state: GlyphState; label: string }[] = [
@@ -32,11 +31,11 @@ const PRINCIPLES = [
   { title: "Flat", body: "No gradients, no synthwave, no neon. Fills are fills." },
   {
     title: "Quiet",
-    body: "The interface gets out of the way so the work stays the point, not the chrome around it.",
+    body: "The interface stays out of the way so your work remains the point.",
   },
   {
-    title: "One obvious next action",
-    body: "Every screen has a single clear thing to do next — not three competing ones fighting for attention.",
+    title: "One clear next step",
+    body: "Each screen makes the next useful action easy to find.",
   },
 ];
 
@@ -46,20 +45,18 @@ export default function KipCornerPage() {
       <Section className="py-16 sm:py-24">
         <SectionHeader
           kicker="Kip's Corner"
-          title="The little planet with a plan"
-          lead="Kip is a lowercase k with a seafoam moon in permanent orbit — here's the thinking behind it."
+          title="Meet the little planet"
+          lead="Kip is a lowercase k with a small seafoam moon in orbit."
         />
         <div className="mt-10 grid gap-10 md:grid-cols-2 md:items-center">
           <div className="space-y-4 text-[15px] leading-relaxed text-ink-secondary">
             <p>
-              The mark started as a question: what does a personal agent look like when it isn&apos;t
-              trying to be a face? Not a chatbot avatar, not a mascot with eyes glued on. Just a
-              shape that suggests something small, orbiting something steady.
+              The mark started with a question: what should a helpful AI look like when it is not
+              trying to be a person? The answer was something small orbiting something steady.
             </p>
             <p>
-              The lowercase &ldquo;k&rdquo; carries a seafoam dot that never leaves its orbit — a
-              moon that&apos;s always there. It&apos;s meant to feel less like a logo and more like a
-              little world quietly working, whether or not you&apos;re looking at it.
+              The lowercase &ldquo;k&rdquo; carries a seafoam moon that stays in orbit. It feels like
+              a little world quietly working, whether or not you are looking at it.
             </p>
           </div>
           <div className="flex items-center justify-center">
@@ -71,8 +68,8 @@ export default function KipCornerPage() {
       <Section className="py-16 sm:py-24">
         <SectionHeader
           kicker="Run states"
-          title="Six moods, one planet"
-          lead="The status glyphs tell you what Kip is doing at a glance — same seafoam planet, different orbit."
+          title="Six ways Kip looks"
+          lead="The changing orbit shows what Kip is doing at a glance."
         />
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
           {GLYPH_STATES.map(({ state, label }) => (
@@ -87,8 +84,8 @@ export default function KipCornerPage() {
       <Section className="py-16 sm:py-24">
         <SectionHeader
           kicker="Palette"
-          title="The colors, named"
-          lead="Fixed brand colors — identical in light and dark mode, used for meaning, not decoration."
+          title="Kip’s colors"
+          lead="The same colors carry meaning in light and dark mode."
         />
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {PALETTE.map((swatch) => (
@@ -104,7 +101,7 @@ export default function KipCornerPage() {
       </Section>
 
       <Section className="py-16 sm:py-24">
-        <SectionHeader kicker="Design principles" title="How Kip is supposed to feel" />
+        <SectionHeader kicker="Design principles" title="How Kip should feel" />
         <div className="mt-10 grid gap-6 sm:grid-cols-3">
           {PRINCIPLES.map((p) => (
             <KipCard key={p.title}>
@@ -118,11 +115,10 @@ export default function KipCornerPage() {
       <Section className="py-16 sm:py-24">
         <KipCard className="mx-auto max-w-2xl py-10 text-center">
           <Kicker className="mb-3">A small secret</Kicker>
-          <h2 className="text-2xl font-semibold text-ink">The Mottles live in the empty states</h2>
+          <h2 className="text-2xl font-semibold text-ink">Meet the Mottles</h2>
           <p className="mt-3 text-[15px] leading-relaxed text-ink-secondary">
-            Somewhere in the app&apos;s quieter corners — the empty inbox, the blank conversation —
-            a few chaotic little monster friends have started showing up. We call them the
-            Mottles. More on them once they&apos;ve settled in.
+            A few playful little monsters appear in empty inboxes and blank conversations. We call
+            them the Mottles.
           </p>
         </KipCard>
       </Section>

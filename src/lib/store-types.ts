@@ -1,5 +1,12 @@
 import type { ContentKey, ContentMap } from "@/lib/content-types";
 
+export const CONTENT_NAMESPACE = "copy-v2";
+
+/** Keep rewritten copy isolated from legacy production overrides without a schema change. */
+export function contentStorageKey(key: ContentKey): `${typeof CONTENT_NAMESPACE}/${ContentKey}` {
+  return `${CONTENT_NAMESPACE}/${key}`;
+}
+
 /* Shared contract for the two SiteStore implementations:
    - store-db.ts   → Neon Postgres via drizzle-orm (when DATABASE_URL is set)
    - store-file.ts → JSON file at .data/site.json (dev fallback)

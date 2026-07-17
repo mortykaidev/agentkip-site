@@ -4,8 +4,8 @@ import { getContent } from "@/lib/content";
 import { Section, SectionHeader } from "@/components/ui";
 
 export const metadata: Metadata = {
-  title: "Gallery",
-  description: "Screenshots and clips of AgentKip in action.",
+  title: "See Kip",
+  description: "A simple look at Kip on iPhone.",
 };
 
 export default async function GalleryPage() {
@@ -14,9 +14,9 @@ export default async function GalleryPage() {
   return (
     <Section className="py-16 sm:py-24">
       <SectionHeader
-        kicker="Gallery"
-        title="See it in action"
-        lead="Screenshots and clips from the app, updated as the beta grows."
+        kicker="Inside the app"
+        title="See Kip in action"
+        lead="Take a quick look at the iPhone app."
       />
       {gallery.length > 0 ? (
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -33,9 +33,9 @@ export default async function GalleryPage() {
         </div>
       ) : (
         <div className="kip-card mt-10 max-w-xl p-7">
-          <p className="font-semibold text-ink">Product captures are being prepared.</p>
+          <p className="font-semibold text-ink">More screens are coming.</p>
           <p className="mt-2 text-sm leading-relaxed text-ink-secondary">
-            This page will show real AgentKip screens when reviewed captures are available.
+            We’ll add more views as the beta grows.
           </p>
         </div>
       )}

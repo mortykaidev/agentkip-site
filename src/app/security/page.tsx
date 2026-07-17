@@ -7,44 +7,43 @@ import { Reveal } from "@/components/reveal";
 export const metadata: Metadata = {
   title: "Security",
   description:
-    "How AgentKip handles your keys, your data, and your server — including the honest parts: what’s solid today, what the real risks are, and how to mitigate them.",
+    "How AgentKip protects device connections, saved chats, AI keys, and the computer running Noggin.",
 };
 
 /* ---------------------------------------------------------------------------
-   The honest security page. Plain language, no spin. Two lists:
-   what's genuinely solid today (mint) and what we disclose openly (butter),
-   each disclosure paired with its mitigation. Facts verified against the
+   Plain-language security page. Two lists: shipped controls (mint) and known
+   risks (butter), each risk paired with a mitigation. Facts verified against the
    noggin / agentkip-ios codebases per the approved plan.
 --------------------------------------------------------------------------- */
 
 const SOLID_TODAY: { title: string; body: string }[] = [
   {
-    title: "Provider API keys never touch the phone",
-    body: "Your OpenAI / Anthropic / other provider keys live in your server’s environment. The iOS app never sees, stores, or transmits them — it only talks to your server.",
+    title: "AI keys stay off iPhone",
+    body: "OpenAI, Anthropic, and other AI keys stay with Noggin. The iPhone app uses its own device credentials to talk to Noggin.",
   },
   {
-    title: "Every endpoint requires a bearer token",
-    body: "There are no unauthenticated API endpoints. The server checks the token on every request using a constant-time comparison, which avoids timing side-channels.",
+    title: "Each device gets credentials",
+    body: "Secure pairing gives each iPhone its own access and refresh credentials instead of copying one shared server key.",
   },
   {
-    title: "The server refuses to start with a weak key",
-    body: "If the server API key is missing or shorter than 16 characters, the server will not boot. We treat a guessable key as remote code execution waiting to happen — so it’s a hard stop, not a warning.",
+    title: "Credentials rotate",
+    body: "Refresh credentials are single-use and replaced as the connection renews, which limits reuse of an older token.",
   },
   {
-    title: "Pairing token lives in the iOS Keychain",
-    body: "On the phone, the token is stored in the Keychain with device-only accessibility. It is not synced to iCloud and doesn’t leave the device.",
+    title: "Secrets stay in Keychain",
+    body: "The device identity and connection credentials use device-only iOS Keychain storage and do not sync through iCloud.",
   },
   {
-    title: "HTTPS enforced for remote hosts",
-    body: "The app requires HTTPS when connecting to a server outside your trusted local ranges. The blessed setup for testers routes traffic through the agentkip.app relay (Cloudflare Tunnel); self-hosters can use Tailscale (WireGuard) directly instead.",
+    title: "Remote links require HTTPS",
+    body: "Kip rejects plain HTTP for remote addresses. Testers can use the agentkip.app relay, while self-hosters can use Tailscale.",
   },
   {
-    title: "Honest capability gating",
-    body: "The app only shows features your server actually supports. No dead buttons pretending capabilities exist — what you see is what your setup can do.",
+    title: "Revocation fails closed",
+    body: "When Noggin rejects a revoked device, Kip removes the active credentials and requires a fresh pairing code.",
   },
 ];
 
-const HONEST_ABOUT: { title: string; body: string; mitigation: React.ReactNode }[] = [
+const KNOWN_RISKS: { title: string; body: string; mitigation: React.ReactNode }[] = [
   {
     title: "The agent can run shell commands on its host",
     body: "That’s the point of an agent — and it’s also the biggest risk. By default, the operating system is the security boundary between the agent and everything else on that machine.",
@@ -60,12 +59,12 @@ const HONEST_ABOUT: { title: string; body: string; mitigation: React.ReactNode }
     ),
   },
   {
-    title: "Today’s pairing token is the server’s long-lived key",
-    body: "When you pair by QR code, the phone receives the server’s own long-lived API key. There is no per-device token yet, and no automatic expiry — if it leaks, rotation is manual.",
+    title: "A paired phone is trusted",
+    body: "A paired iPhone can ask Noggin to do work until that device is removed or its credentials are revoked.",
     mitigation: (
       <>
-        Treat the QR code like a password: don’t screenshot or share it. If you suspect a leak,
-        rotate the key on the server and re-pair. Per-device expiring tokens are on the roadmap.
+        Protect the pairing code and your iPhone. If a phone is lost or a connection looks wrong,
+        revoke that device and pair again with a fresh code.
       </>
     ),
   },
@@ -80,12 +79,12 @@ const HONEST_ABOUT: { title: string; body: string; mitigation: React.ReactNode }
     ),
   },
   {
-    title: "Provider keys sit in a plaintext env file on the host",
-    body: "Like most self-hosted software, your provider API keys are stored in a plaintext environment file on the server. Standard practice — but you should know it.",
+    title: "Host access can expose keys",
+    body: "Anyone with administrator access to the computer running Noggin may be able to read its AI keys and saved data.",
     mitigation: (
       <>
         Protect the host: enable full-disk encryption, keep the machine patched, and restrict who
-        can log in. Anyone with access to that box has access to those keys.
+        can log in. Keep unrelated personal files off a machine you use for agent work.
       </>
     ),
   },
@@ -93,12 +92,12 @@ const HONEST_ABOUT: { title: string; body: string; mitigation: React.ReactNode }
 
 const WEBSITE_DATA: { label: string; detail: string }[] = [
   {
-    label: "No analytics or tracking in the app",
-    detail: "The iOS app contains no analytics SDK, no tracking pixels, no telemetry phoning home.",
+    label: "No advertising analytics",
+    detail: "The iOS app has no third-party advertising analytics SDK. Its usage view is built from your saved sessions.",
   },
   {
     label: "The website collects only what you give it",
-    detail: "Sign-in (handled by Clerk — we never see your credentials), a waitlist email if you join, and contact messages if you send one. That’s the list.",
+    detail: "The site stores sign-in details through Clerk, a waitlist email if you join, and contact messages you send.",
   },
 ];
 
@@ -110,8 +109,8 @@ export default function SecurityPage() {
         <Reveal>
           <SectionHeader
             kicker="Security"
-            title="Honest by default"
-            lead="Three principles drive every decision here: your keys and conversations live on your server, not ours. The app is a thin client — it holds a pairing token and nothing else sensitive. And when there’s a real risk, we’d rather disclose it plainly than polish over it."
+            title="Security, without the maze"
+            lead="Your iPhone stores device credentials. Noggin stores chats and AI keys. Online AI companies still receive requests sent to their models."
           />
         </Reveal>
       </Section>
@@ -119,7 +118,7 @@ export default function SecurityPage() {
       {/* Architecture diagram */}
       <Section className="mt-14">
         <Reveal>
-          <Kicker className="mb-5">The shape of the system</Kicker>
+          <Kicker className="mb-5">How data moves</Kicker>
         </Reveal>
         <Reveal>
           <KipCard className="p-6 sm:p-8">
@@ -131,9 +130,9 @@ export default function SecurityPage() {
                   <h3 className="font-semibold">Your iPhone</h3>
                 </div>
                 <ul className="mt-3 space-y-2 text-sm text-ink-secondary">
-                  <li>Thin native client — no provider keys, ever</li>
-                  <li>Pairing token in the iOS Keychain</li>
-                  <li>Device-only accessibility, not iCloud-synced</li>
+                  <li>No AI company keys</li>
+                  <li>Per-device connection credentials</li>
+                  <li>Device-only iOS Keychain storage</li>
                 </ul>
               </div>
 
@@ -150,8 +149,8 @@ export default function SecurityPage() {
                   TLS · agentkip.app relay / Tailscale
                 </Pill>
                 <p className="mt-3 text-sm text-ink-secondary">
-                  Traffic rides an encrypted tunnel between your phone and your server. Nothing
-                  passes through our infrastructure — there is no middle.
+                  Remote setups use an encrypted connection. The path depends on whether you use
+                  the agentkip.app relay or Tailscale.
                 </p>
               </div>
               <div
@@ -166,12 +165,12 @@ export default function SecurityPage() {
               <div className="flex-1 rounded-[10px] border border-hairline bg-elevated p-5">
                 <div className="flex items-center gap-3">
                   <StatusGlyph state="working" size={28} />
-                  <h3 className="font-semibold">Your server</h3>
+                  <h3 className="font-semibold">Your Noggin</h3>
                 </div>
                 <ul className="mt-3 space-y-2 text-sm text-ink-secondary">
-                  <li>Bearer-token auth on every endpoint</li>
-                  <li>Provider API keys in the server environment</li>
-                  <li>Conversations and memory stored here, on your disk</li>
+                  <li>Checks paired-device credentials</li>
+                  <li>Stores AI keys for online models</li>
+                  <li>Saves conversations and memory</li>
                 </ul>
               </div>
             </div>
@@ -179,13 +178,13 @@ export default function SecurityPage() {
         </Reveal>
       </Section>
 
-      {/* What's solid today */}
+      {/* Shipped controls */}
       <Section className="mt-20">
         <Reveal>
           <SectionHeader
-            kicker="What’s solid today"
-            title="The parts we’re confident in"
-            lead="These are shipped and verifiable in the code, not aspirations."
+            kicker="Shipped controls"
+            title="What protects you today"
+            lead="These controls are present in the current app and Noggin connection flow."
           />
         </Reveal>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -196,7 +195,7 @@ export default function SecurityPage() {
                   <StatusGlyph state="done" size={26} className="mt-0.5 shrink-0" />
                   <div>
                     <Pill tone="mint" className="mb-2">
-                      Solid
+                      Built
                     </Pill>
                     <h3 className="font-semibold leading-snug">{item.title}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-ink-secondary">{item.body}</p>
@@ -208,17 +207,17 @@ export default function SecurityPage() {
         </div>
       </Section>
 
-      {/* What we're honest about */}
+      {/* Known risks */}
       <Section className="mt-20">
         <Reveal>
           <SectionHeader
-            kicker="What we’re honest about"
-            title="The risks, in plain language"
-            lead="Every self-hosted agent has these tradeoffs. Here are ours, each with the mitigation we actually recommend — because you’d find them anyway, and you should hear them from us first."
+            kicker="Known risks"
+            title="What still needs care"
+            lead="Running an agent on your own computer gives it useful power and creates responsibilities."
           />
         </Reveal>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
-          {HONEST_ABOUT.map((item, i) => (
+          {KNOWN_RISKS.map((item, i) => (
             <Reveal key={item.title} delay={(i % 2) * 60}>
               <KipCard className="h-full">
                 <Pill tone="butter" className="mb-3">
@@ -245,7 +244,7 @@ export default function SecurityPage() {
         <Reveal>
           <SectionHeader
             kicker="Your data"
-            title="What we collect (short list)"
+            title="What the site collects"
           />
         </Reveal>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -276,9 +275,8 @@ export default function SecurityPage() {
             <div>
               <h3 className="font-semibold">Found something?</h3>
               <p className="mt-1 text-sm text-ink-secondary">
-                If you’ve discovered a vulnerability or a claim on this page that doesn’t hold up,
-                tell us. Security reports get a security-first response — read, taken seriously,
-                and answered.
+                If you found a security problem or an outdated claim, tell Brandon so it can be
+                checked and fixed.
               </p>
             </div>
             <Link

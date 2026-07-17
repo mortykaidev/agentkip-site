@@ -3,6 +3,7 @@ import path from "node:path";
 import type { ContentKey, ContentMap } from "@/lib/content-types";
 import {
   getErrorMessage,
+  contentStorageKey,
   type AddWaitlistResult,
   type ContactMessageEntry,
   type ContactMessageInput,
@@ -16,11 +17,10 @@ import {
   objects; nothing is mutated in place.
 */
 
-const DATA_DIR = path.join(process.cwd(), ".data");
-const DATA_FILE = path.join(DATA_DIR, "site.json");
+const DATA_FILE = path.join(process.cwd(), ".data", "site.json");
 
 type FileData = {
-  sections: Partial<ContentMap>;
+  sections: Record<string, unknown>;
   waitlist: WaitlistEntry[];
   contactMessages: ContactMessageEntry[];
   nextWaitlistId: number;
@@ -43,55 +43,58 @@ function isMissingFileError(error: unknown): boolean {
   );
 }
 
-async function readData(): Promise<FileData> {
+async function readData(dataFile: string): Promise<FileData> {
   let raw: string;
   try {
-    raw = await readFile(DATA_FILE, "utf8");
+    raw = await readFile(dataFile, "utf8");
   } catch (error) {
     if (isMissingFileError(error)) return EMPTY_DATA;
-    throw new Error(`Failed to read ${DATA_FILE}: ${getErrorMessage(error)}`);
+    throw new Error(`Failed to read ${dataFile}: ${getErrorMessage(error)}`);
   }
   try {
     return { ...EMPTY_DATA, ...(JSON.parse(raw) as Partial<FileData>) };
   } catch {
     throw new Error(
-      `${DATA_FILE} contains invalid JSON. Fix or delete the file and try again.`,
+      `${dataFile} contains invalid JSON. Fix or delete the file and try again.`,
     );
   }
 }
 
-async function writeData(data: FileData): Promise<void> {
+async function writeData(dataFile: string, data: FileData): Promise<void> {
   try {
-    await mkdir(DATA_DIR, { recursive: true });
-    const tempFile = `${DATA_FILE}.tmp`;
+    await mkdir(path.dirname(dataFile), { recursive: true });
+    const tempFile = `${dataFile}.tmp`;
     await writeFile(tempFile, `${JSON.stringify(data, null, 2)}\n`, "utf8");
-    await rename(tempFile, DATA_FILE);
+    await rename(tempFile, dataFile);
   } catch (error) {
-    throw new Error(`Failed to write ${DATA_FILE}: ${getErrorMessage(error)}`);
+    throw new Error(`Failed to write ${dataFile}: ${getErrorMessage(error)}`);
   }
 }
 
-export function createFileStore(): SiteStore {
+export function createFileStore(dataFile = DATA_FILE): SiteStore {
   return {
     async getSection<K extends ContentKey>(key: K): Promise<ContentMap[K] | null> {
-      const data = await readData();
-      return (data.sections[key] as ContentMap[K] | undefined) ?? null;
+      const data = await readData(dataFile);
+      return (data.sections[contentStorageKey(key)] as ContentMap[K] | undefined) ?? null;
     },
 
     async setSection<K extends ContentKey>(key: K, value: ContentMap[K]): Promise<void> {
-      const data = await readData();
-      await writeData({ ...data, sections: { ...data.sections, [key]: value } });
+      const data = await readData(dataFile);
+      await writeData(dataFile, {
+        ...data,
+        sections: { ...data.sections, [contentStorageKey(key)]: value },
+      });
     },
 
     async deleteSection(key: ContentKey): Promise<void> {
-      const data = await readData();
+      const data = await readData(dataFile);
       const rest = { ...data.sections };
-      delete rest[key];
-      await writeData({ ...data, sections: rest });
+      delete rest[contentStorageKey(key)];
+      await writeData(dataFile, { ...data, sections: rest });
     },
 
     async addWaitlistEmail(email: string): Promise<AddWaitlistResult> {
-      const data = await readData();
+      const data = await readData(dataFile);
       const normalized = email.toLowerCase();
       const exists = data.waitlist.some((entry) => entry.email.toLowerCase() === normalized);
       if (exists) return { status: "already-subscribed" };
@@ -100,7 +103,7 @@ export function createFileStore(): SiteStore {
         email: normalized,
         createdAt: new Date().toISOString(),
       };
-      await writeData({
+      await writeData(dataFile, {
         ...data,
         waitlist: [...data.waitlist, entry],
         nextWaitlistId: data.nextWaitlistId + 1,
@@ -109,20 +112,20 @@ export function createFileStore(): SiteStore {
     },
 
     async listWaitlist(): Promise<WaitlistEntry[]> {
-      const data = await readData();
+      const data = await readData(dataFile);
       return [...data.waitlist].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     },
 
     async deleteWaitlistEntry(id: number): Promise<void> {
-      const data = await readData();
-      await writeData({
+      const data = await readData(dataFile);
+      await writeData(dataFile, {
         ...data,
         waitlist: data.waitlist.filter((entry) => entry.id !== id),
       });
     },
 
     async addContactMessage(input: ContactMessageInput): Promise<void> {
-      const data = await readData();
+      const data = await readData(dataFile);
       const entry: ContactMessageEntry = {
         id: data.nextContactMessageId,
         name: input.name,
@@ -130,7 +133,7 @@ export function createFileStore(): SiteStore {
         message: input.message,
         createdAt: new Date().toISOString(),
       };
-      await writeData({
+      await writeData(dataFile, {
         ...data,
         contactMessages: [...data.contactMessages, entry],
         nextContactMessageId: data.nextContactMessageId + 1,
@@ -138,13 +141,13 @@ export function createFileStore(): SiteStore {
     },
 
     async listContactMessages(): Promise<ContactMessageEntry[]> {
-      const data = await readData();
+      const data = await readData(dataFile);
       return [...data.contactMessages].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     },
 
     async deleteContactMessage(id: number): Promise<void> {
-      const data = await readData();
-      await writeData({
+      const data = await readData(dataFile);
+      await writeData(dataFile, {
         ...data,
         contactMessages: data.contactMessages.filter((entry) => entry.id !== id),
       });

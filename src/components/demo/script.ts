@@ -1,7 +1,6 @@
 /* Scripted content for the simulated homepage demo.
    Honesty rule: this is a canned transcript — the UI must always caption it as
-   "Simulated demo — a scripted transcript, not a live model." Lane captions stay
-   provider-agnostic (Kip shows whatever models your server exposes). */
+   "Scripted demo. No live AI is running." */
 
 export type DemoLaneId = "quick" | "everyday" | "deep" | "best" | "code";
 
@@ -12,11 +11,11 @@ export type DemoLane = {
 };
 
 export const DEMO_LANES: DemoLane[] = [
-  { id: "quick", label: "Quick", caption: "fast, low-cost lane" },
-  { id: "everyday", label: "Everyday", caption: "balanced default" },
-  { id: "deep", label: "Deep", caption: "extended reasoning" },
-  { id: "best", label: "Best", caption: "your strongest model" },
-  { id: "code", label: "Code", caption: "tuned for code work" },
+  { id: "quick", label: "Quick", caption: "Fast answers" },
+  { id: "everyday", label: "Everyday", caption: "Most tasks" },
+  { id: "deep", label: "Deep", caption: "Harder questions" },
+  { id: "best", label: "Best", caption: "Your top choice" },
+  { id: "code", label: "Code", caption: "Coding help" },
 ];
 
 export const DEFAULT_LANE_ID: DemoLaneId = "everyday";
@@ -46,62 +45,61 @@ export type DemoPrompt = DemoExchange & {
 
 export const DEMO_PROMPTS: DemoPrompt[] = [
   {
-    id: "morning",
-    chipLabel: "Plan my morning",
-    userText: "Plan my morning",
-    thinkingLabel: "Checking your notes…",
-    reply: "Here's a morning that fits what's on your plate:",
+    id: "week",
+    chipLabel: "Plan my week",
+    userText: "I’m starting a small candle shop. Help me plan this week.",
+    thinkingLabel: "Turning that into steps…",
+    reply: "Here’s a simple first week:",
     card: {
-      title: "Your morning",
+      title: "Your first week",
       rows: [
-        { icon: "clock", text: "7:30 — Coffee + overnight briefing" },
-        { icon: "clock", text: "8:00 — Deep work: deploy checklist" },
-        { icon: "clock", text: "9:30 — Reply to Sam" },
-        { icon: "clock", text: "10:00 — Walk (you skipped yesterday)" },
+        { icon: "clock", text: "Monday — Pick three scents" },
+        { icon: "clock", text: "Tuesday — Price each candle" },
+        { icon: "clock", text: "Wednesday — Take product photos" },
+        { icon: "clock", text: "Thursday — Write the shop page" },
       ],
-      footer: "Start a Focus sprint for 8:00?",
+      footer: "Friday — Ask five friends for feedback.",
     },
   },
   {
-    id: "build",
-    chipLabel: "Fix the failing build",
-    userText: "Fix the failing build",
-    thinkingLabel: "Reading the build log…",
-    reply: "Found it — the import was stale. Here's what changed:",
+    id: "email",
+    chipLabel: "Write a follow-up",
+    userText: "Write a friendly follow-up for someone who hasn’t replied.",
+    thinkingLabel: "Drafting a short note…",
+    reply: "Here’s a warm version you can send:",
     card: {
-      title: "Build fixed",
+      title: "Follow-up email",
       rows: [
-        { icon: "check", text: "tests/test_notify.py imported schedule_brief, renamed to schedule_briefing" },
-        { icon: "check", text: "Suite re-run: 42 passed, 0 failed" },
-        { icon: "check", text: "Fix pushed to fix/notify-import" },
+        { icon: "check", text: "Hi Maya — just checking in on the note below." },
+        { icon: "check", text: "No rush. I’d still love to hear what you think when you have a moment." },
+        { icon: "check", text: "Thanks, Brandon" },
       ],
-      footer: "Ready for your review.",
+      footer: "Want it more casual or more direct?",
     },
   },
   {
-    id: "grocery",
-    chipLabel: "What did I spend at the grocery store?",
-    userText: "What did I spend at the grocery store?",
-    thinkingLabel: "Searching scanned receipts…",
-    reply: "From the receipts you scanned this month, here's the grocery breakdown:",
+    id: "receipt",
+    chipLabel: "Read this receipt",
+    userText: "Turn this grocery receipt into a short list.",
+    thinkingLabel: "Reading the receipt…",
+    reply: "I found three useful details:",
     card: {
-      title: "Grocery spend",
+      title: "Receipt summary",
       rows: [
-        { icon: "coin", text: "3 trips — $187.40 total" },
-        { icon: "coin", text: "$64.12 · $58.90 · $64.38" },
-        { icon: "coin", text: "About $23 under last month" },
+        { icon: "coin", text: "Total — $64.12" },
+        { icon: "coin", text: "8 items" },
+        { icon: "coin", text: "Largest item — coffee beans, $18.00" },
       ],
-      footer: "Biggest repeat item: coffee beans, twice.",
+      footer: "I can also sort the items by category.",
     },
   },
 ];
 
 /** Played when a visitor types their own message into the composer. */
 export const COMPOSER_EXCHANGE: Omit<DemoExchange, "userText"> = {
-  thinkingLabel: "Reading that…",
+  thinkingLabel: "Reading your message…",
   reply:
-    "Nice try — this demo is a scripted tour, not a live model, so I can't actually run that one.\n\nOn your own Kip box I'd take a real swing at it. Grab an invite and ask me again for real.",
+    "This page only plays prepared examples. In the Kip app, you can ask in your own words.",
 };
 
-export const DEMO_DISCLAIMER =
-  "Simulated demo — a scripted transcript, not a live model.";
+export const DEMO_DISCLAIMER = "Scripted demo. No live AI is running.";

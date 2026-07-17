@@ -19,7 +19,7 @@ export function ContactForm({ className = "" }: { className?: string }) {
       <div className={`kip-card flex items-center gap-3 p-5 ${className}`} role="status">
         <span className="size-2 shrink-0 rounded-full bg-accent" aria-hidden="true" />
         <p className="text-sm font-medium text-ink">
-          Message sent — Brandon will get back to you.
+          Message sent. Brandon will get back to you.
         </p>
       </div>
     );
@@ -71,7 +71,7 @@ export function ContactForm({ className = "" }: { className?: string }) {
             name="message"
             required
             rows={5}
-            placeholder="Questions, bug reports, invite requests…"
+            placeholder="How can we help?"
             className={`${FIELD_INPUT} resize-y`}
           />
         </div>

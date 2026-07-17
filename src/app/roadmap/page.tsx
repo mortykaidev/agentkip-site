@@ -5,7 +5,7 @@ import type { RoadmapItem } from "@/lib/content-types";
 
 export const metadata: Metadata = {
   title: "Roadmap",
-  description: "What's building, planned, and exploring for AgentKip — intent, not a promise.",
+  description: "See what the AgentKip team is building, planning, and exploring.",
 };
 
 const COLUMNS: { status: RoadmapItem["status"]; heading: string; tone: PillTone }[] = [
@@ -19,9 +19,9 @@ export default async function RoadmapPage() {
 
   return (
     <Section className="py-16 sm:py-24">
-      <SectionHeader kicker="Roadmap" title="What's next" />
+      <SectionHeader kicker="Roadmap" title="What we’re building" />
       <p className="mt-4 max-w-2xl text-sm text-ink-muted">
-        Roadmap = intent, not a promise. Nothing here is shipped until it&apos;s in the changelog.
+        Plans can change. A feature is available only after it appears in What changed.
       </p>
       <div className="mt-10 grid gap-8 md:grid-cols-3">
         {COLUMNS.map((col) => {

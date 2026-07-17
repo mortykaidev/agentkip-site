@@ -17,6 +17,7 @@ const nonEmpty = z.string().trim().min(1, "Required");
 
 export const contentKeySchema = z.enum([
   "hero",
+  "homeBenefits",
   "getPage",
   "siteStatus",
   "contact",
@@ -35,6 +36,14 @@ export const CONTENT_SCHEMAS: { [K in ContentKey]: z.ZodType<ContentMap[K]> } = 
     primaryCtaLabel: nonEmpty,
     secondaryCtaLabel: nonEmpty,
   }),
+  homeBenefits: z
+    .array(
+      z.object({
+        title: nonEmpty,
+        description: nonEmpty,
+      }),
+    )
+    .length(6, "Add exactly six homepage groups"),
   getPage: z
     .object({
       betaStage: z.enum(["invite", "testflight", "appstore"]),

@@ -63,6 +63,20 @@ export const ADMIN_SECTIONS: AdminSection[] = [
     },
   },
   {
+    slug: "home-benefits",
+    key: "homeBenefits",
+    title: "Homepage help groups",
+    description: "The six cards under “One AI. Many ways to help.”",
+    spec: {
+      mode: "array",
+      itemLabel: "Help group",
+      fields: [
+        { kind: "text", name: "title", label: "Title" },
+        { kind: "textarea", name: "description", label: "Description", rows: 2 },
+      ],
+    },
+  },
+  {
     slug: "get-page",
     key: "getPage",
     title: "Get page",

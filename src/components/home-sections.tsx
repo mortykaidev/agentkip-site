@@ -3,6 +3,31 @@
 import Link from "next/link";
 import { ArrowIcon, ProductPhone } from "@/components/launch";
 import { PhoneDemo } from "@/components/demo/phone-demo";
+import type { HomeBenefit } from "@/lib/content-types";
+
+export function BenefitsSection({ benefits }: { benefits: HomeBenefit[] }) {
+  return (
+    <section
+      id="what-kip-can-do"
+      className="launch-band"
+      aria-labelledby="home-benefits-title"
+    >
+      <h2 id="home-benefits-title" className="text-3xl font-semibold tracking-tight text-ink">
+        One AI. Many ways to help.
+      </h2>
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {benefits.map((benefit) => (
+          <article key={benefit.title} className="kip-card h-full">
+            <h3 className="font-semibold text-ink">{benefit.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-ink-secondary">
+              {benefit.description}
+            </p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 export function DemoSection() {
   return (
@@ -50,33 +75,33 @@ export function ScreensStrip() {
 
 const COMPARE_ROWS = [
   {
-    label: "Your conversations",
-    kip: "Stay in your home",
-    others: "On their servers",
+    label: "Saved chats",
+    kip: "Your computer",
+    others: "Their cloud",
     icon: <HouseIcon />,
   },
   {
-    label: "Choice of AI",
-    kip: "Any provider",
-    others: "Just theirs",
+    label: "AI models",
+    kip: "Your choice",
+    others: "Their choice",
     icon: <SparkleIcon />,
   },
   {
-    label: "Cost during beta",
-    kip: "Free + your API keys",
-    others: "Free tier or subscription",
+    label: "Price",
+    kip: "Pay for use",
+    others: "Free or paid",
     icon: <TagIcon />,
   },
   {
-    label: "Off switch",
-    kip: "Unplug the box",
-    others: "Account settings",
+    label: "Control",
+    kip: "Yours",
+    others: "Theirs",
     icon: <PowerIcon />,
   },
   {
     label: "Setup",
-    kip: "Some — the tradeoff",
-    others: "None",
+    kip: "A few steps",
+    others: "Sign in",
     icon: <WrenchIcon />,
   },
 ] as const;
@@ -135,6 +160,10 @@ export function CompareStrip() {
           </article>
         ))}
       </div>
+      <p className="mt-5 max-w-3xl text-sm leading-relaxed text-ink-secondary">
+        Kip saves chats on the computer running Noggin. When you choose an online AI model, that
+        provider still processes the prompt and reply under its own terms.
+      </p>
       <Link href="/compare" className="home-compare-link">
         See the full comparison <ArrowIcon />
       </Link>

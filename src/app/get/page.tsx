@@ -10,8 +10,7 @@ import { getContent } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Get Kip",
-  description:
-    "Open the current AgentKip install destination, or see when the next iPhone release becomes available.",
+  description: "Install the current AgentKip beta or join the waitlist from your iPhone.",
 };
 
 const GET_URL = "https://agentkip.ai/get";
@@ -23,11 +22,10 @@ export default async function GetPage() {
     <div className="get-page">
       <section className="get-hero" aria-labelledby="get-title">
         <div>
-          <p className="get-eyebrow">One link. The current release.</p>
+          <p className="get-eyebrow">One link for Kip</p>
           <h1 id="get-title">Get Kip.</h1>
           <p className="get-lead">
-            Open this page on your iPhone. When an App Store or TestFlight release is ready, this
-            same link will take you straight there.
+            Open this page on your iPhone. It always points to the latest available way to get Kip.
           </p>
           {release.betaStage !== "appstore" && (
             <Pill tone="neutral" className="mt-5">
@@ -59,10 +57,10 @@ export default async function GetPage() {
       <section className="get-release" aria-labelledby="release-title">
         <ReleasePanel release={release} />
         <div className="get-release-note">
-          <h2 id="release-title">A stable destination</h2>
+          <h2 id="release-title">One link to save</h2>
           <p>
-            You can share <strong>agentkip.ai/get</strong> now. The destination behind it changes
-            only after a real release URL has been verified.
+            Save or share <strong>agentkip.ai/get</strong>. We update it when a new install link is
+            ready.
           </p>
           <Link href="/support" className="launch-text-link">
             Need help? <ArrowIcon />
@@ -83,8 +81,8 @@ export default async function GetPage() {
             {release.nogginStage === "repository" && release.nogginRepositoryUrl ? (
               <>
                 <p>
-                  Noggin is the server Kip connects to. Start with the public repository, then
-                  follow the setup for your platform.
+                  Noggin is the program Kip connects to. Open the repository, then follow the
+                  setup for your computer.
                 </p>
                 <p>
                   <a
@@ -101,10 +99,10 @@ export default async function GetPage() {
             ) : (
               <div className="get-noggin-placeholder">
                 <Pill tone="butter">Invite access</Pill>
-                <h2>The public Noggin repository is not linked yet.</h2>
+                <h2>Noggin setup is invite-only.</h2>
                 <p>
-                  Self-hosting instructions will appear here only when there is a verified public
-                  repository. Until then, beta setup details arrive with an invite.
+                  Public setup steps will appear here when the Noggin repository is ready. Beta
+                  testers receive the current steps with their invite.
                 </p>
               </div>
             )}
@@ -120,8 +118,8 @@ function ReleasePanel({ release }: { release: GetPageContent }) {
     return (
       <div className="get-release-card">
         <Pill tone="mint">App Store</Pill>
-        <h2>Kip is ready for your iPhone.</h2>
-        <p>Open the verified App Store listing to install the current release.</p>
+        <h2>Kip is ready to install.</h2>
+        <p>Open the App Store listing on your iPhone.</p>
         <a href={release.appStoreUrl} className="get-release-button" rel="noreferrer">
           View on the App Store <ArrowIcon />
         </a>
@@ -133,8 +131,8 @@ function ReleasePanel({ release }: { release: GetPageContent }) {
     return (
       <div className="get-release-card">
         <Pill tone="mint">TestFlight</Pill>
-        <h2>Join the current iPhone beta.</h2>
-        <p>Open the verified TestFlight invitation on your iPhone to install Kip.</p>
+        <h2>Join the iPhone beta.</h2>
+        <p>Open the TestFlight invite on your iPhone.</p>
         <a href={release.testflightUrl} className="get-release-button" rel="noreferrer">
           Open TestFlight <ArrowIcon />
         </a>
@@ -148,7 +146,7 @@ function ReleasePanel({ release }: { release: GetPageContent }) {
       <h2>{release.inviteHeadline}</h2>
       <p>{release.inviteBody}</p>
       <WaitlistForm className="get-waitlist" />
-      <p>Join the list and you&rsquo;ll be first to know the moment a spot opens up.</p>
+      <p>We’ll email you when a place opens.</p>
     </div>
   );
 }

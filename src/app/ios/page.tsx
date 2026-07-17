@@ -12,28 +12,28 @@ import {
 } from "@/app/ios/mocks";
 
 export const metadata: Metadata = {
-  title: "iOS 27 features",
+  title: "Made for iPhone",
   description:
-    "Widgets, Live Activities, Dynamic Island, Control Center controls, Siri, Spotlight, Handoff, on-device Apple Intelligence, and Liquid Glass — what Kip does with iOS 27.",
+    "See how Kip uses widgets, Live Activities, Siri, sharing, and on-device Apple Intelligence.",
 };
 
 const WIDGETS = [
-  { name: "Today with Kip", description: "Connection status, active or last run, next automation, today's cost.", glyph: "idle" as const },
-  { name: "Active Run", description: "Is Kip working right now — phase and elapsed time, or idle and ready.", glyph: "working" as const },
-  { name: "Ask Kip", description: "Three one-tap targets: new chat, voice, or continue where you left off.", glyph: "thinking" as const },
-  { name: "Kip Meter", description: "Today's tokens in/out, tool calls, and estimated cost.", glyph: "done" as const },
-  { name: "Next Automation", description: "Your next scheduled job, a countdown, and how the last one went.", glyph: "sleeping" as const },
-  { name: "Context Gauge", description: "How full the current conversation's context window is, at a glance.", glyph: "idle" as const },
-  { name: "Gateway Health", description: "Server status, gateway name, version and uptime, queued runs.", glyph: "done" as const },
+  { name: "Today with Kip", description: "See your connection, latest task, next job, and cost.", glyph: "idle" as const },
+  { name: "Active Run", description: "See what Kip is doing and how long it has taken.", glyph: "working" as const },
+  { name: "Ask Kip", description: "Start a chat, speak, or continue where you stopped.", glyph: "thinking" as const },
+  { name: "Kip Meter", description: "See today’s use and estimated cost.", glyph: "done" as const },
+  { name: "Next Automation", description: "See the next scheduled job and the last result.", glyph: "sleeping" as const },
+  { name: "Context Gauge", description: "See how much room is left in the current chat.", glyph: "idle" as const },
+  { name: "Gateway Health", description: "Check whether Noggin is online and ready.", glyph: "done" as const },
 ];
 
 const CONTROLS = [
-  { label: "Ask Kip", detail: "Opens Kip and starts dictating." },
-  { label: "New Kip Chat", detail: "Jumps straight into a fresh conversation." },
-  { label: "Stop Kip Run", detail: "Cancels a running task in the background." },
-  { label: "Kip Quiet Mode", detail: "Real toggle — mutes notifications app-wide.", toggled: true, tone: "mint" as const },
-  { label: "Kip Offline Mode", detail: "Real toggle — pauses all calls to your server.", toggled: false, tone: "peach" as const },
-  { label: "Start Focus Sprint", detail: "Opens Kip into the Focus time-budget picker." },
+  { label: "Ask Kip", detail: "Open Kip and start speaking." },
+  { label: "New Kip Chat", detail: "Open a new conversation." },
+  { label: "Stop Kip Run", detail: "Stop the current task." },
+  { label: "Kip Quiet Mode", detail: "Mute Kip notifications.", toggled: true, tone: "mint" as const },
+  { label: "Kip Offline Mode", detail: "Pause connections to Noggin.", toggled: false, tone: "peach" as const },
+  { label: "Start Focus Sprint", detail: "Choose a focus timer." },
 ];
 
 const SHORTCUTS = [
@@ -48,11 +48,11 @@ const SHORTCUTS = [
 ];
 
 const FOUNDATION_MODELS_FEATURES = [
-  { title: "Session titles", body: "Generates a short title for a new conversation on-device, so your chat list stays readable." },
-  { title: "Memory extraction", body: "Suggests durable facts worth remembering from a transcript — always shown to you for confirmation before anything is saved." },
-  { title: "Morning briefing lines", body: "Turns your overnight activity into a plain-English summary line, generated locally." },
-  { title: "Next-move suggestions", body: "Proposes a reasonable next step in a conversation, as a tappable chip — never auto-sent." },
-  { title: "Offline drafts", body: "Drafts a rough reply on-device when your server is unreachable, so you're not stuck with a blank box." },
+  { title: "Chat titles", body: "Give a new conversation a short title on your iPhone." },
+  { title: "Memory suggestions", body: "Suggest useful details to save, then wait for your approval." },
+  { title: "Morning summaries", body: "Turn overnight activity into one clear line." },
+  { title: "Next steps", body: "Offer a next step you can tap, change, or ignore." },
+  { title: "Offline drafts", body: "Draft a short reply when Noggin cannot be reached." },
 ];
 
 export default function IosFeaturesPage() {
@@ -62,12 +62,11 @@ export default function IosFeaturesPage() {
         <Reveal>
           <Kicker>iOS 27</Kicker>
           <h1 className="mt-3 max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-            Built for iOS 27, not bolted onto it
+            Made for iPhone
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-ink-secondary text-pretty">
-            Kip is a native SwiftUI app, so it gets to use the real platform: widgets that read
-            your actual run state, a Dynamic Island that tracks a live task, Control Center
-            toggles that do something, and on-device intelligence that never leaves your phone.
+            Kip fits into the iPhone features you already use: widgets, Dynamic Island, Control
+            Center, Siri, sharing, and on-device Apple Intelligence.
           </p>
         </Reveal>
       </Section>
@@ -77,8 +76,8 @@ export default function IosFeaturesPage() {
         <Reveal>
           <SectionHeader
             kicker="Home & Lock Screen"
-            title="7 widgets, always reading live state"
-            lead="No mock data — every widget pulls from a shared snapshot the app keeps up to date, so what you see on your Home Screen matches what's actually happening on your server."
+            title="Seven useful widgets"
+            lead="See Kip’s latest saved state without opening the app."
           />
         </Reveal>
         <Reveal delay={80}>
@@ -95,8 +94,8 @@ export default function IosFeaturesPage() {
         <Reveal>
           <SectionHeader
             kicker="Live Activities"
-            title="2 Live Activities, including the Dynamic Island"
-            lead="Kick off a long-running task and watch it from the Island or the Lock Screen — no need to keep the app open."
+            title="Follow work at a glance"
+            lead="Start a longer task and follow it from Dynamic Island or the Lock Screen."
           />
         </Reveal>
         <Reveal delay={80}>
@@ -104,8 +103,7 @@ export default function IosFeaturesPage() {
             <KipCard className="p-6">
               <p className="font-semibold text-ink">Kip Run</p>
               <p className="mt-1 text-sm text-ink-secondary">
-                Phase (connecting → thinking → using a tool → responding), elapsed time, model
-                name, conversation title — with a real Stop button while it&apos;s running.
+                See the current step, time, AI choice, and conversation title, or stop the task.
               </p>
               <div className="mt-6">
                 <DynamicIslandMock
@@ -119,8 +117,7 @@ export default function IosFeaturesPage() {
             <KipCard className="p-6">
               <p className="font-semibold text-ink">Kip Focus Sprint</p>
               <p className="mt-1 text-sm text-ink-secondary">
-                Current task title, position in the sprint (&quot;2 of 4&quot;), and a countdown to the
-                next break — updated locally by the app as you work.
+                See your current focus task, place in the sprint, and time until the next break.
               </p>
               <div className="mt-6">
                 <DynamicIslandMock
@@ -140,8 +137,8 @@ export default function IosFeaturesPage() {
         <Reveal>
           <SectionHeader
             kicker="Control Center · Lock Screen · Action Button"
-            title="6 controls, all wired to real actions"
-            lead="Quiet Mode and Offline Mode are genuine stateful toggles — they reflect your actual settings, not a static icon."
+            title="Six ways to start"
+            lead="Start, stop, or change Kip from Control Center or the Lock Screen."
           />
         </Reveal>
         <Reveal delay={80}>
@@ -165,15 +162,14 @@ export default function IosFeaturesPage() {
       {/* Siri, App Intents, Spotlight */}
       <Section className="py-10">
         <Reveal>
-          <SectionHeader kicker="Siri & Search" title="App Intents, App Shortcuts, and Spotlight" />
+          <SectionHeader kicker="Siri & Search" title="Ask with Siri" />
         </Reveal>
         <Reveal delay={80}>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             <KipCard className="p-6">
               <p className="font-semibold text-ink">Talk to Siri</p>
               <p className="mt-2 text-sm text-ink-secondary">
-                Eight App Shortcuts, each backed by a real App Intent — say &quot;Ask Kip…&quot; or &quot;Run my
-                Kip briefing&quot; and it actually runs.
+                Use eight shortcuts for common actions, including &quot;Ask Kip&quot; and &quot;Run my Kip briefing.&quot;
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {SHORTCUTS.map((s) => (
@@ -186,11 +182,10 @@ export default function IosFeaturesPage() {
             <KipCard className="p-6">
               <p className="font-semibold text-ink">Spotlight indexing</p>
               <p className="mt-2 text-sm text-ink-secondary">
-                Your conversation titles and scheduled automation names are indexed for search, so
-                you can jump straight back into one from anywhere on iOS.
+                Search conversation titles and scheduled job names, then jump back in.
               </p>
               <p className="mt-3 text-sm text-ink-secondary">
-                Privacy note: only titles and names are indexed — never message content.
+                Spotlight sees titles and names, not message text.
               </p>
             </KipCard>
           </div>
@@ -200,15 +195,14 @@ export default function IosFeaturesPage() {
       {/* Share extension + Handoff */}
       <Section className="py-10">
         <Reveal>
-          <SectionHeader kicker="Sharing & Continuity" title="Share extension and Handoff" />
+          <SectionHeader kicker="Sharing & Continuity" title="Share into Kip" />
         </Reveal>
         <Reveal delay={80}>
           <div className="mt-8 grid gap-6 sm:grid-cols-2">
             <div>
               <p className="font-semibold text-ink">Share into Kip</p>
               <p className="mt-2 text-sm text-ink-secondary">
-                Text, a URL, or up to 4 images from any app&apos;s share sheet — it lands in a private
-                inbox on your phone, not sent anywhere until you open Kip.
+                Send text, a link, or up to four images to a private inbox on your phone.
               </p>
               <div className="mt-4">
                 <ShareSheetMock />
@@ -217,8 +211,7 @@ export default function IosFeaturesPage() {
             <KipCard className="p-6">
               <p className="font-semibold text-ink">Handoff</p>
               <p className="mt-2 text-sm text-ink-secondary">
-                Start a conversation on your iPhone, pick it back up on another of your Apple
-                devices. Handoff carries the session id and title only — never message content.
+                Continue a conversation on another Apple device using only its ID and title.
               </p>
             </KipCard>
           </div>
@@ -230,8 +223,8 @@ export default function IosFeaturesPage() {
         <Reveal>
           <SectionHeader
             kicker="On-device"
-            title="Apple Intelligence, running locally"
-            lead="Built on Apple's FoundationModels framework — nothing here calls out to a server, and there's no API cost."
+            title="Small jobs stay on iPhone"
+            lead="These optional Apple Intelligence features run on your device."
           />
         </Reveal>
         <Reveal delay={80}>
@@ -246,9 +239,8 @@ export default function IosFeaturesPage() {
         </Reveal>
         <Reveal delay={140}>
           <p className="mt-6 max-w-2xl text-sm text-ink-muted">
-            Honest note: these features are garnish, not load-bearing. On a device without Apple
-            Intelligence — or with it turned off — Kip silently no-ops and behaves exactly as it
-            would otherwise. Nothing breaks; you just don&apos;t see the on-device extras.
+            If Apple Intelligence is unavailable or turned off, Kip skips these extras and keeps
+            working without them.
           </p>
         </Reveal>
       </Section>
@@ -256,7 +248,7 @@ export default function IosFeaturesPage() {
       {/* Liquid Glass */}
       <Section className="py-10">
         <Reveal>
-          <SectionHeader kicker="Look & feel" title="Liquid Glass icon, used with restraint" />
+          <SectionHeader kicker="Look & feel" title="At home on iPhone" />
         </Reveal>
         <Reveal delay={80}>
           <div className="mt-8 flex flex-col items-start gap-6 sm:flex-row sm:items-center">
@@ -265,10 +257,8 @@ export default function IosFeaturesPage() {
             </div>
             <div className="max-w-xl">
               <p className="text-sm text-ink-secondary">
-                The app icon uses Apple&apos;s new Liquid Glass icon format. In the app itself, glass
-                is an optional style you can turn on — it shows up on the chat composer bar, the
-                &quot;jump to latest message&quot; button, and the next-move suggestion chip. Turn on Reduce
-                Transparency in iOS and Kip falls back to flat, opaque surfaces automatically.
+                Kip supports Apple&apos;s Liquid Glass icon and optional glass controls. Turn on
+                Reduce Transparency and the app uses flat, solid surfaces instead.
               </p>
             </div>
           </div>
@@ -278,11 +268,9 @@ export default function IosFeaturesPage() {
       <Section className="py-14">
         <Reveal>
           <p className="max-w-2xl text-sm text-ink-muted">
-            Everything above targets <span className="font-semibold text-ink">iOS 27</span>. For
-            devices that can&apos;t take the newest OS yet, there&apos;s a separate build —{" "}
-            <span className="font-semibold text-ink">Kip26</span> — targeting iOS 26 with the
-            same core app and a slightly smaller feature set, so more people can actually install
-            it.
+            These features target <span className="font-semibold text-ink">iOS 27</span>. The
+            separate <span className="font-semibold text-ink">Kip26</span> build keeps the main
+            experience on iOS 26 with fewer extras.
           </p>
         </Reveal>
       </Section>
