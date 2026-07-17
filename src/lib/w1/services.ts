@@ -318,7 +318,11 @@ export function createW1Services(deps: W1ServiceDependencies): W1Services {
             || !constantTimeDigestEqual(row.claimHash, presentedDigest)
             || row.status !== "active"
             || row.expiresAt.getTime() <= now.getTime()) return null;
-          if (!entitlement || entitlement.status !== "active" || entitlement.id !== row.entitlementId || entitlement.clerkSubject !== row.clerkSubject || entitlement.product !== row.product) return null;
+          if (!entitlement || entitlement.status !== "active") {
+            await tx.updateClaim({ ...row, status: "revoked", consumedAt: null, redemptionId: null, revokedAt: now, revokeReason: "entitlement_inactive" });
+            return null;
+          }
+          if (entitlement.id !== row.entitlementId || entitlement.clerkSubject !== row.clerkSubject || entitlement.product !== row.product) return null;
 
           const redemption = await tx.consumeClaim(row.id);
           if (!redemption) return null;

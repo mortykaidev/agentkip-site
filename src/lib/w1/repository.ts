@@ -124,8 +124,8 @@ const decodeClaim = (raw: unknown): ClaimRow => {
   if (row.redemptionId !== null && typeof row.redemptionId !== "string") throw new TypeError(label);
   const consumedAt = row.consumedAt === null ? null : epochDate(row.consumedAt); if (row.consumedAt !== null && !consumedAt) throw new TypeError(label);
   const revokedAt = row.revokedAt === null ? null : epochDate(row.revokedAt); if (row.revokedAt !== null && !revokedAt) throw new TypeError(label);
-  if (row.revokeReason !== null && row.revokeReason !== "delivery_uncertain") throw new TypeError(label);
-  return { id, entitlementId, clerkSubject, product: "agentkip_first_friend", claimHash: row.claimHash, pepperVersion: row.pepperVersion, status, expiresAt, redemptionId: row.redemptionId as string | null, consumedAt, revokedAt, revokeReason: row.revokeReason as "delivery_uncertain" | null };
+  if (row.revokeReason !== null && row.revokeReason !== "delivery_uncertain" && row.revokeReason !== "entitlement_inactive") throw new TypeError(label);
+  return { id, entitlementId, clerkSubject, product: "agentkip_first_friend", claimHash: row.claimHash, pepperVersion: row.pepperVersion, status, expiresAt, redemptionId: row.redemptionId as string | null, consumedAt, revokedAt, revokeReason: row.revokeReason as "delivery_uncertain" | "entitlement_inactive" | null };
 };
 const decodeWebhookEvent = (raw: unknown, expectedId: string): WebhookEventRow => {
   const label = "invalid webhook event row"; const row = exactRow(raw, ["stripeEventId", "eventType", "eventCreatedAt", "status", "attemptCount", "processedAt", "nextRetryAt", "failureCode"], label);

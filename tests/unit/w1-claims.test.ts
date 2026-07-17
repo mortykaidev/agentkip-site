@@ -217,6 +217,26 @@ describe("W1 C4 bounded claim atomicity and recovery", () => {
     expect(fixture.state.redemptionOperations.size).toBe(0);
   });
 
+  it("revokes active claim atomically when entitlement is inactive and never revives on reactivation", async () => {
+    const fixture = new ClaimFixture();
+    const services = fixture.services();
+    const issued = await services.issueClaim("subject-a", key, digest("a"), sourceIpHash);
+    const activeEntitlement = fixture.state.entitlements.get("subject-a");
+    if (!activeEntitlement) throw new Error("fixture entitlement missing");
+    const now = fixture.clock.now();
+    fixture.state.entitlements.set("subject-a", { ...activeEntitlement, status: "revoked", revokedAt: now });
+
+    await expect(services.redeemClaim(issued.claim, "redeem-inactive-key", digest("n"))).rejects.toMatchObject({ code: "claim_not_found" });
+    expect(fixture.state.claims.get(issued.claim_id)).toMatchObject({ status: "revoked", revokeReason: "entitlement_inactive", consumedAt: null, redemptionId: null });
+    expect(fixture.state.claims.get(issued.claim_id)?.revokedAt).toEqual(now);
+    expect(fixture.state.redemptionOperations.size).toBe(0);
+
+    fixture.state.entitlements.set("subject-a", { ...activeEntitlement, status: "active", revokedAt: null });
+    await expect(services.redeemClaim(issued.claim, "redeem-revived-key", digest("o"))).rejects.toMatchObject({ code: "claim_not_found" });
+    expect(fixture.state.claims.get(issued.claim_id)?.status).toBe("revoked");
+    expect(fixture.state.redemptionOperations.size).toBe(0);
+  });
+
   it("atomically binds one consumption to exact safe replay metadata", async () => {
     const fixture = new ClaimFixture();
     const services = fixture.services();
