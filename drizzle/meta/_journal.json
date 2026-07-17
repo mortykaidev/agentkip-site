@@ -22,6 +22,13 @@
       "when": 1783958463468,
       "tag": "0002_w1_constraint_repair",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784236425806,
+      "tag": "0003_w1_redemption_recovery",
+      "breakpoints": true
     }
   ]
 }

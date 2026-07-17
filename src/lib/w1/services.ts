@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
-import { CLAIM_IP_ATTEMPT_LIMIT, CLAIM_RATE_WINDOW_MS, CLAIM_SUBJECT_SUCCESS_LIMIT, CLAIM_TTL_MS, REVOKE_PRINCIPAL_LIMIT, ENTITLEMENT_PRODUCT, IDEMPOTENCY_TTL_MS, nodeClock, nodeMonotonicClock, nodeRandom, nodeSleeper, noopLogger, type W1Clock, type W1Logger, type W1MonotonicClock, type W1Random, type W1Sleeper } from "./constants";
-import { deriveStripeIdempotencyKey, generateClaim, hashClaim, parseClaim } from "./crypto";
+import { CLAIM_IP_ATTEMPT_LIMIT, CLAIM_SUBJECT_SUCCESS_LIMIT, CLAIM_TTL_MS, CLAIM_UNAVAILABLE_PAD_MS, REVOKE_PRINCIPAL_LIMIT, ENTITLEMENT_PRODUCT, IDEMPOTENCY_TTL_MS, INTERNAL_REDEEM_PRINCIPAL, nodeClock, nodeMonotonicClock, nodeRandom, nodeSleeper, noopLogger, type IdempotentRoute, type W1Clock, type W1Logger, type W1MonotonicClock, type W1Random, type W1Sleeper } from "./constants";
+import { constantTimeDigestEqual, deriveStripeIdempotencyKey, generateClaim, hashClaim, parseClaim } from "./crypto";
 import { mapUnexpectedError, w1Error } from "./errors";
 import { decideIdempotency, idempotencyWindow, type IdempotencyRecord, type MetadataForRoute } from "./idempotency";
-import type { ClaimRow, EntitlementViewRow, W1Repository } from "./repository";
-import { webhookRepositoryTx } from "./repository";
+import type { ClaimRedemptionMetadata, ClaimRow, W1Repository } from "./repository";
+import { claimRedemptionRepositoryTx, webhookRepositoryTx } from "./repository";
 import { createW1Repository } from "./repository";
 import { createW1Database } from "./db";
 import { createStripeCheckoutGateway, createStripeWebhookGateway, type StripeCheckoutPort, type StripeWebhookPort, type VerifiedStripeEnvelope } from "./stripe";
@@ -15,14 +15,14 @@ export interface CheckoutResponse { checkoutUrl: string; expiresAt: string; }
 export interface EntitlementResponse { entitlement: { product: "tester"; status: "inactive" | "pending" | "active" | "past_due" | "revoked"; source: "stripe_subscription" | null; granted_at: string | null; revoked_at: string | null; updated_at: string | null; }; }
 export interface ClaimIssueResponse { claim_id: string; claim: string; expires_at: string; replayable: false; }
 export interface ClaimRevokeResponse { claim_id: string; status: "revoked" | "expired"; expires_at: string; replayable: false; reissue_path: string; }
-export interface ClaimRedeemResponse { redemption_id: string; subject: string; entitlement: string; product: "tester"; }
+export type ClaimRedeemResponse = ClaimRedemptionMetadata;
 export interface CheckoutAuthority { readonly priceId: string; readonly productId: string; }
 export interface CheckoutAuthorityResolver { resolve(): CheckoutAuthority; }
 interface W1BaseRequestScope { repository: W1Repository; close(): Promise<void>; }
 export interface W1CheckoutRequestScope extends W1BaseRequestScope { checkoutAuthority: CheckoutAuthorityResolver; checkoutStripe: StripeCheckoutPort; }
 export interface W1WebhookRequestScope extends W1BaseRequestScope { webhookStripe: StripeWebhookPort; webhookLogger?: W1Logger; }
 export interface W1ClaimRequestScope extends W1BaseRequestScope { claimPepper: string; rateLimitPepper: string; }
-export interface W1RedeemRequestScope extends W1ClaimRequestScope { internalBearer: string; }
+export interface W1RedeemRequestScope extends W1ClaimRequestScope { internalBearer: string; clock?: W1Clock; monotonic?: W1MonotonicClock; sleeper?: W1Sleeper; }
 export type W1EntitlementRequestScope = W1BaseRequestScope;
 export type W1RequestScope = W1CheckoutRequestScope | W1WebhookRequestScope | W1ClaimRequestScope | W1RedeemRequestScope | W1EntitlementRequestScope;
 export interface W1RequestScopeFactory {
@@ -33,8 +33,8 @@ export interface W1RequestScopeFactory {
   create(kind: "entitlement"): Promise<W1EntitlementRequestScope>;
 }
 export interface W1ServiceDependencies { repository: W1Repository; checkoutAuthority?: CheckoutAuthorityResolver; checkoutStripe?: StripeCheckoutPort; webhookStripe?: StripeWebhookPort; clock?: W1Clock; random?: W1Random; monotonic?: W1MonotonicClock; sleeper?: W1Sleeper; claimPepper?: string; rateLimitPepper?: string; logger?: W1Logger; }
-export type IdempotencyPreflight<R extends "/api/billing/checkout" | "/api/bootstrap-claims" | "/api/bootstrap-claims/[claim_id]/revoke" | "/api/bootstrap-claims/[claim_id]/reissue"> = { kind: "completed"; metadata: MetadataForRoute<R> } | { kind: "reserved"; id: string };
-export interface W1Services { inspectIdempotency<R extends "/api/billing/checkout" | "/api/bootstrap-claims" | "/api/bootstrap-claims/[claim_id]/revoke" | "/api/bootstrap-claims/[claim_id]/reissue">(subject: string, route: R, key: string, digest: string): Promise<MetadataForRoute<R> | null>; preflightIdempotency<R extends "/api/billing/checkout" | "/api/bootstrap-claims" | "/api/bootstrap-claims/[claim_id]/revoke" | "/api/bootstrap-claims/[claim_id]/reissue">(subject: string, route: R, key: string, digest: string): Promise<IdempotencyPreflight<R>>; checkout(subject: string, key: string, digest: string): Promise<CheckoutResponse>; getEntitlement(subject: string): Promise<EntitlementResponse>; issueClaim(subject: string, key: string, digest: string, sourceIpHash: string): Promise<ClaimIssueResponse>; revokeClaim(subject: string, claimId: string, key: string, digest: string): Promise<ClaimRevokeResponse>; reissueClaim(subject: string, claimId: string, key: string, digest: string, sourceIpHash: string): Promise<ClaimIssueResponse>; redeemClaim(claim: string): Promise<ClaimRedeemResponse>; handleWebhook(envelope: VerifiedStripeEnvelope, requestId: string): Promise<{ received: true }>; }
+export type IdempotencyPreflight<R extends IdempotentRoute> = { kind: "completed"; metadata: MetadataForRoute<R> } | { kind: "reserved"; id: string };
+export interface W1Services { inspectIdempotency<R extends IdempotentRoute>(subject: string, route: R, key: string, digest: string): Promise<MetadataForRoute<R> | null>; preflightIdempotency<R extends IdempotentRoute>(subject: string, route: R, key: string, digest: string): Promise<IdempotencyPreflight<R>>; checkout(subject: string, key: string, digest: string): Promise<CheckoutResponse>; getEntitlement(subject: string): Promise<EntitlementResponse>; issueClaim(subject: string, key: string, digest: string, sourceIpHash: string): Promise<ClaimIssueResponse>; revokeClaim(subject: string, claimId: string, key: string, digest: string): Promise<ClaimRevokeResponse>; reissueClaim(subject: string, claimId: string, key: string, digest: string, sourceIpHash: string): Promise<ClaimIssueResponse>; redeemClaim(claim: string, key: string, digest: string): Promise<ClaimRedeemResponse>; handleWebhook(envelope: VerifiedStripeEnvelope, requestId: string): Promise<{ received: true }>; }
 const iso = (date: Date) => date.toISOString();
 const recovery = (claim: ClaimRow): MetadataForRoute<"/api/bootstrap-claims"> => {
   if (claim.status !== "active") throw new TypeError("invalid active claim recovery");
@@ -285,7 +285,59 @@ export function createW1Services(deps: W1ServiceDependencies): W1Services {
         return { claim_id: row.id, claim: token.claim, expires_at: iso(expiresAt), replayable: false };
       });
     } catch (error) { if (error instanceof Error && "code" in error) throw error; throw mapUnexpectedError("claim"); } },
-    async redeemClaim(claim) { const started = monotonic.now(); const parsed = parseClaim(claim); if (!parsed) throw w1Error("invalid_request"); try { const claimPepper = deps.claimPepper; if (!claimPepper) throw new Error("claim configuration unavailable"); const result = await deps.repository.transaction(async (tx) => { await tx.acquireAdvisoryLock("claim-redeem:" + claimHashKey(parsed.id)); const row = await tx.lockClaim(parsed.id); const digest = hashClaim(claim, claimPepper); const valid = row && row.status === "active" && row.claimHash === digest && row.expiresAt.getTime() > clock.now().getTime(); if (!valid) return null; const entitlement = await tx.lockEntitlement(row.clerkSubject); if (!entitlement || entitlement.status !== "active") return null; const redemption = await tx.consumeClaim(row.id); return redemption ? { redemption_id: redemption.toLowerCase(), subject: row.clerkSubject, entitlement: row.entitlementId, product: "tester" as const } : null; }); if (!result) { await sleeper.sleep(Math.max(0, 75 - (monotonic.now() - started))); throw w1Error("claim_not_found"); } return result; } catch (error) { if (error instanceof Error && "code" in error) throw error; throw mapUnexpectedError("claim"); } },
+    async redeemClaim(claim, key, digest) {
+      const started = monotonic.now();
+      const parsed = parseClaim(claim);
+      if (!parsed) throw w1Error("invalid_request");
+      try {
+        const claimPepper = deps.claimPepper;
+        if (!claimPepper) throw new Error("claim configuration unavailable");
+        const result = await deps.repository.transaction(async (tx): Promise<ClaimRedeemResponse | null> => {
+          const capability = claimRedemptionRepositoryTx(tx);
+          if (!capability) throw new Error("claim redemption repository capability unavailable");
+          await tx.acquireAdvisoryLock("claim-redemption-operation:" + claimHashKey(INTERNAL_REDEEM_PRINCIPAL + "\0" + key));
+          const existing = await capability.readClaimRedemptionOperation(INTERNAL_REDEEM_PRINCIPAL, key);
+          if (existing) {
+            if (existing.requestDigest !== digest) throw w1Error("idempotency_conflict");
+            return existing.responseMetadata;
+          }
+
+          const presentedDigest = hashClaim(claim, claimPepper);
+          const discovered = await capability.readClaim(parsed.id);
+          if (!discovered || !constantTimeDigestEqual(discovered.claimHash, presentedDigest)) return null;
+
+          const entitlement = await tx.lockEntitlement(discovered.clerkSubject);
+          const row = await tx.lockClaim(parsed.id);
+          const now = clock.now();
+          if (!row
+            || row.id !== discovered.id
+            || row.clerkSubject !== discovered.clerkSubject
+            || row.entitlementId !== discovered.entitlementId
+            || row.product !== discovered.product
+            || row.pepperVersion !== discovered.pepperVersion
+            || !constantTimeDigestEqual(row.claimHash, presentedDigest)
+            || row.status !== "active"
+            || row.expiresAt.getTime() <= now.getTime()) return null;
+          if (!entitlement || entitlement.status !== "active") {
+            // CLAIM_UNAVAILABLE_PAD_MS must stay above p99 latency of this extra UPDATE so the padded failure timing stays uniform.
+            await tx.updateClaim({ ...row, status: "revoked", consumedAt: null, redemptionId: null, revokedAt: now, revokeReason: "entitlement_inactive" });
+            return null;
+          }
+          if (entitlement.id !== row.entitlementId || entitlement.clerkSubject !== row.clerkSubject || entitlement.product !== row.product) return null;
+
+          const redemption = await tx.consumeClaim(row.id);
+          if (!redemption) return null;
+          const response = { redemption_id: redemption, subject: row.clerkSubject, entitlement: row.entitlementId, product: "tester" as const };
+          await capability.insertClaimRedemptionOperation({ principal: INTERNAL_REDEEM_PRINCIPAL, idempotencyKey: key, requestDigest: digest, responseStatus: 200, responseMetadata: response, expiresAt: new Date(now.getTime() + IDEMPOTENCY_TTL_MS) });
+          return response;
+        });
+        if (!result) {
+          await sleeper.sleep(Math.max(0, CLAIM_UNAVAILABLE_PAD_MS - (monotonic.now() - started)));
+          throw w1Error("claim_not_found");
+        }
+        return result;
+      } catch (error) { if (error instanceof Error && "code" in error) throw error; throw mapUnexpectedError("claim"); }
+    },
     async handleWebhook(envelope, requestId) {
       const stripe = deps.webhookStripe;
       if (!stripe || !/^evt_[A-Za-z0-9_]+$/.test(envelope.id) || !Number.isFinite(envelope.createdAt.getTime())) throw mapUnexpectedError("webhook");

@@ -2,6 +2,8 @@ import { randomBytes, randomUUID } from "node:crypto";
 
 export const PUBLIC_PRODUCT = "tester" as const;
 export const ENTITLEMENT_PRODUCT = "agentkip_first_friend" as const;
+export const BOOTSTRAP_CLAIM_REDEEM_ROUTE = "/api/internal/bootstrap-claims/redeem" as const;
+export const INTERNAL_REDEEM_PRINCIPAL = "agentkip-control-plane" as const;
 export const IDEMPOTENT_ROUTES = ["/api/billing/checkout", "/api/bootstrap-claims", "/api/bootstrap-claims/[claim_id]/revoke", "/api/bootstrap-claims/[claim_id]/reissue"] as const;
 export const SUPPORTED_STRIPE_EVENTS = ["customer.subscription.deleted", "customer.subscription.updated", "customer.subscription.created", "invoice.payment_failed", "invoice.paid", "checkout.session.completed"] as const;
 export const STRIPE_EVENT_PRECEDENCE = { "customer.subscription.deleted": 100, "customer.subscription.updated": 90, "customer.subscription.created": 80, "invoice.payment_failed": 60, "invoice.paid": 50, "checkout.session.completed": 10 } as const;

@@ -82,6 +82,27 @@ export const requestIdempotency = pgTable("request_idempotency", {
   check("request_idempotency_state_check", sql`(${table.status} = 'processing' and ${table.responseStatus} is null and ${table.responseMetadata} is null and ${table.lockedUntil} is not null) or (${table.status} = 'completed' and ${table.responseStatus} between 200 and 599 and ${table.responseMetadata} is not null and ${table.lockedUntil} is null)`),
 ]);
 
+export const bootstrapClaimRedemptions = pgTable("bootstrap_claim_redemptions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  principal: text("principal").notNull(),
+  idempotencyKey: text("idempotency_key").notNull(),
+  requestDigest: text("request_digest").notNull(),
+  responseStatus: integer("response_status").notNull(),
+  responseMetadata: jsonb("response_metadata").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt,
+  updatedAt,
+}, (table) => [
+  uniqueIndex("bootstrap_claim_redemptions_principal_key_unique").on(table.principal, table.idempotencyKey),
+  index("bootstrap_claim_redemptions_expiry_idx").on(table.expiresAt),
+  check("bootstrap_claim_redemptions_principal_check", sql`${table.principal} = 'agentkip-control-plane'`),
+  check("bootstrap_claim_redemptions_key_check", sql`${table.idempotencyKey} ~ '^[A-Za-z0-9._:-]{8,128}$'`),
+  check("bootstrap_claim_redemptions_digest_check", sql`${table.requestDigest} ~ '^[0-9a-f]{64}$'`),
+  check("bootstrap_claim_redemptions_status_check", sql`${table.responseStatus} = 200`),
+  check("bootstrap_claim_redemptions_metadata_check", sql`jsonb_typeof(${table.responseMetadata}) = 'object' and ${table.responseMetadata} ?& array['redemption_id','subject','entitlement','product'] and (${table.responseMetadata} - 'redemption_id' - 'subject' - 'entitlement' - 'product') = '{}'::jsonb and jsonb_typeof(${table.responseMetadata}->'redemption_id') = 'string' and (${table.responseMetadata}->>'redemption_id') ~ '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' and jsonb_typeof(${table.responseMetadata}->'subject') = 'string' and (${table.responseMetadata}->>'subject') ~ '^[A-Za-z0-9_-]{1,255}$' and jsonb_typeof(${table.responseMetadata}->'entitlement') = 'string' and (${table.responseMetadata}->>'entitlement') ~ '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' and jsonb_typeof(${table.responseMetadata}->'product') = 'string' and ${table.responseMetadata}->>'product' = 'tester'`),
+  check("bootstrap_claim_redemptions_expiry_check", sql`${table.expiresAt} > ${table.createdAt}`),
+]);
+
 export const billingCheckoutIntents = pgTable("billing_checkout_intents", {
   id: uuid("id").primaryKey().defaultRandom(),
   requestIdempotencyId: uuid("request_idempotency_id").notNull().unique().references(() => requestIdempotency.id, { onDelete: "restrict" }),
