@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Kicker, KipCard, Pill, Section, SectionHeader } from "@/components/ui";
 import { StatusGlyph } from "@/components/brand";
 import { Reveal } from "@/components/reveal";
+import { TAILSCALE_LINKS } from "@/lib/tailscale-links";
 
 export const metadata: Metadata = {
   title: "Security",
@@ -152,6 +153,14 @@ export default function SecurityPage() {
                   Remote setups use an encrypted connection. The path depends on whether you use
                   the agentkip.app relay or Tailscale.
                 </p>
+                <a
+                  href={TAILSCALE_LINKS.serve}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-flex text-sm font-semibold text-accent underline underline-offset-4 hover:text-ink"
+                >
+                  Tailscale Serve guide
+                </a>
               </div>
               <div
                 className="flex items-center justify-center gap-2 px-2 py-1 lg:flex-col lg:py-0"

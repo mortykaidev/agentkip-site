@@ -2,8 +2,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import HomePage from "@/app/page";
 import ComparePage from "@/app/compare/page";
+import DeployDocsPage from "@/app/docs/deploy/page";
+import { OsTabs } from "@/app/get/os-tabs";
 import HowItWorksPage from "@/app/how-it-works/page";
+import SecurityPage from "@/app/security/page";
 import sitemap from "@/app/sitemap";
+import { TAILSCALE_LINKS, TAILSCALE_SERVE_COMMAND } from "@/lib/tailscale-links";
 
 describe("public site", () => {
   it("keeps the locked beginner-first hero, benefit groups, and comparison copy", async () => {
@@ -80,6 +84,25 @@ describe("public site", () => {
     expect(markup).not.toContain("conversations stay on the box at home");
     expect(markup).not.toContain("not off in someone else’s data center");
     expect(markup).not.toContain("Nothing else to install.");
+  });
+
+  it("links to official Tailscale install and Serve guidance", () => {
+    const getMarkup = renderToStaticMarkup(
+      <OsTabs repositoryUrl="https://github.com/example/noggin" />,
+    );
+    const deployMarkup = renderToStaticMarkup(<DeployDocsPage />);
+    const securityMarkup = renderToStaticMarkup(<SecurityPage />);
+
+    expect(getMarkup).toContain(`href="${TAILSCALE_LINKS.mac}"`);
+    expect(getMarkup).toContain(`href="${TAILSCALE_LINKS.serve}"`);
+    expect(getMarkup).toContain(TAILSCALE_SERVE_COMMAND);
+    expect(deployMarkup).toContain(`href="${TAILSCALE_LINKS.linux}"`);
+    expect(deployMarkup).toContain(`href="${TAILSCALE_LINKS.serve}"`);
+    expect(deployMarkup).toContain(TAILSCALE_SERVE_COMMAND);
+    expect(securityMarkup).toContain(`href="${TAILSCALE_LINKS.serve}"`);
+    for (const url of Object.values(TAILSCALE_LINKS)) {
+      expect(url).toMatch(/^https:\/\/tailscale\.com\//);
+    }
   });
 
   it("publishes the how-it-works route in the sitemap", () => {
